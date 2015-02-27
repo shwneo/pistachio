@@ -13,7 +13,7 @@ class PerlBuilding:
 
 
 	def check_perl_srouce(self):
-		tools_files = os.listdir('./build')
+		tools_files = os.listdir('../build')
 		for file in tools_files:
 			print(file)
 			if file == self.__conf.get('perl', 'dir'):
@@ -21,21 +21,21 @@ class PerlBuilding:
 		return False
 
 	def check_perl_pack(self):
-		tools_files = os.listdir('./build')
+		tools_files = os.listdir('../build')
 		for file in tools_files:
 			if file == self.__conf.get('perl', 'pack'):
 				return True
 		return False
 
 	def download_source(self):
-		os.system('cd ./build && python ../Tools/bin/pwget.py %s' % (self.__conf.get('perl', 'source')))
+		os.system('cd ../build && python ../Tools/bin/pwget.py %s' % (self.__conf.get('perl', 'source')))
 
 	def unpack_source(self):
-		os.system('cd ./build && python ../Tools/bin/ptar.py %s %s' % (self.__conf.get('perl', 'unpack'),
+		os.system('cd ../build && python ../Tools/bin/ptar.py %s %s' % (self.__conf.get('perl', 'unpack'),
 																		self.__conf.get('perl', 'pack')))
 
 	def fix_make_file(self):
-		mk_file_name = './build/%s/win32/Makefile' % self.__conf.get('perl', 'dir')
+		mk_file_name = '../build/%s/win32/Makefile' % self.__conf.get('perl', 'dir')
 		if (os.path.isfile(mk_file_name)):
 			with open(mk_file_name, 'r+') as mk_file:
 				mk_lines = mk_file.readlines()
