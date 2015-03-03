@@ -17,7 +17,7 @@ class BaseBuild:
 	def install_dist(self):
 		if self.__name is None:
 			raise Exception("BaseBuild: Cannot determine the building target, give up")
-		return self.pwd + os.sep + self.__conf.get(self.__name, 'dir') + os.sep
+		return self.__conf.get(self.__name, 'dist')
 
 	def source_name(self):
 		if self.__name is None:
