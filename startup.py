@@ -2,6 +2,7 @@ import os
 import platform
 from Scripts.build_perl import PerlBuilding
 from Scripts.build_svn import SvnBuilding
+from Scripts.build_nasm import NasmBuilding
 # check the environment
 if platform.system() == 'Windows':
 	VC90 = os.environ.get('VS90COMNTOOLS')
@@ -12,5 +13,6 @@ elif platform.system() == 'Linux':
 elif platform.system() == 'Drawin':
 	pass
 
-PerlBuilding.do_build()
-SvnBuilding.do_build()
+#PerlBuilding.do_build()
+#SvnBuilding.do_build()
+NasmBuilding.do_build()

@@ -1,0 +1,1 @@
+xcopy /E /I /Y %1 %2\bin
