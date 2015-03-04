@@ -14,7 +14,9 @@ class SvnBuilding(BaseBuild):
 		if not self.check_srouce():
 			if not self.check_pack():
 				self.download_source()
-			
+			self.unpack_source()
+		os.system('cd ./Build && build_svn.bat %s %s' % (self.source_name(), '..\\' + self.install_dist()))
+	
 
 	@staticmethod
 	def do_build():

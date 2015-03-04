@@ -12,5 +12,5 @@ elif platform.system() == 'Linux':
 elif platform.system() == 'Drawin':
 	pass
 
-#PerlBuilding.do_build()
+PerlBuilding.do_build()
 SvnBuilding.do_build()
