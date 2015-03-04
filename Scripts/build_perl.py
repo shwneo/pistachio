@@ -11,7 +11,7 @@ class PerlBuilding(BaseBuild):
 
 	def fix_make_file(self, compiler):
 		# Only for Win32!
-		mk_file_name = './build/%s/win32/Makefile' % self.source_name()
+		mk_file_name = './Build/%s/win32/Makefile' % self.source_name()
 		if (os.path.isfile(mk_file_name)):
 			with open(mk_file_name, 'r+') as mk_file:
 				mk_lines = mk_file.readlines()
