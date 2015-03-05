@@ -43,7 +43,7 @@ class PerlBuilding(BaseBuild):
 
 	def do_build_win32(self):
 		self.fix_make_file('MSVC90FREE')
-		os.system("cd ./build && build_perl.bat %s" % self.source_name())
+		os.system("cd ./Build && build_perl.bat %s" % self.source_name())
 
 	@staticmethod
 	def do_build():

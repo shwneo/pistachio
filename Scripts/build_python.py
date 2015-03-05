@@ -16,6 +16,10 @@ class PythonBuilding(BaseBuild):
 				python_building.download_source()
 			python_building.unpack_source()
 		SOURCE_PATH = '.' + os.sep + 'Build' + os.sep + python_building.source_name()
+		os.system('mkdir ' + SOURCE_PATH + os.sep + 'externals')
 		if platform.system() == 'Windows':
 			os.system('cd ' + SOURCE_PATH + ' && Tools\\buildbot\\external.bat')
+			# Re-built tcl/tk once again, use the release configure
+			# Build Python
+			os.system('cd ' + SOURCE_PATH + '\\PCBuild && build.bat')
 		
