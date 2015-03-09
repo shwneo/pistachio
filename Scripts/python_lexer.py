@@ -56,7 +56,6 @@ tokens = [
 	'TRIPLEQUOT',
 	'WHITESPACE',
 	'NEWLINE',
-	'PERCENT',
 	'COLON',
 	'BASESTRING',
 	'LONGSTRING',
@@ -74,6 +73,7 @@ tokens = [
 	'COMPLEMENT',
 	'POWER',
 	'IDENTIFIER',
+	'CLASSDEFINE',
 ] + list(key_words.values())
 
 states = (
@@ -166,12 +166,10 @@ t_MINUS = r'\-'
 t_TIMES = r'\*'
 t_DIVIDE = r'\/'
 t_ignore_COMMENT = r'\#.*'
-
 t_WHITESPACE = r'[ \t]+'
 t_NEWLINE = r'\n'
 t_ASSIGN = r'='
 t_EQUAL = r'=='
-t_PERCENT = r'\%'
 t_COLON = r':'
 t_LESSTHAN = r'<'
 t_BIGGERTHAN = r'>'
@@ -187,14 +185,18 @@ t_MOD = r'%'
 t_COMPLEMENT = r'~'
 t_POWER = r'\*\*'
 
-lexer = lex.lex()
-out_file = open('.\\lexer_out.txt', 'w')
-with open('C:\\Python27\\Lib\\sha.py','r') as input_file:
-#with open('C:\\Python27\\Lib\\lib2to3\\test.py') as input_file:
-	input_text = input_file.read()
-	input_text.decode('utf-8')
-	lexer.input(input_text)
-	while True:
-		tok = lexer.token()
-		if not tok: break
-		print tok
+def main():
+	lexer = lex.lex()
+	out_file = open('.\\lexer_out.txt', 'w')
+	#with open('C:\\Python27\\Lib\\sha.py','r') as input_file:
+	with open('C:\\Python27\\Lib\\lib2to3\\test.py') as input_file:
+		input_text = input_file.read()
+		input_text.decode('utf-8')
+		lexer.input(input_text)
+		while True:
+			tok = lexer.token()
+			if not tok: break
+			print tok
+
+if __name__ == '__main__':
+	exit(main())
