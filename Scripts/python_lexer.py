@@ -1,5 +1,7 @@
 import ply.lex as lex
 
+_g_indent = []
+
 key_words = {
 	'class':'CLASS',
 	'def':'DEF',
@@ -28,7 +30,7 @@ key_words = {
 	'assert':'ASSERT',
 	'print':'PRINT',
 	'pass':'PASS',
-	'global','GLOBAL'
+	'global':'GLOBAL',
 	'exec':'EXEC',
 	'finally':'FINALLY',
 }
@@ -93,6 +95,7 @@ tokens = [
 states = (
    ('basestring','exclusive'),
    ('longstring', 'exclusive'),
+   ('indent', 'exclusive')
 )
 
 def t_IDENTIFIER(t):
@@ -162,6 +165,72 @@ def t_basestring_error(t):
 def t_longstring_error(t):
 	process_string(t)
 
+def t_NEWLINE(t):
+	r'\n'
+	t.lexer.push_state('indent')
+	t.type = 'NEWLINE'
+	return t
+
+def t_indent_end(t):
+	r'\s+'
+	if t.value[-1] == '\n':
+		t.type = 'WHITESPACE'
+		t.lexer.pop_state()
+		return t
+	#strip_str = t.value.strip('\n')
+	strip_str = t.value
+	indent_num = len(strip_str)
+	print('Indent space number = %d, stack len = %d' % (indent_num, len(_g_indent)))
+	if len(_g_indent) > 0:
+		if _g_indent[-1] == indent_num:
+			# just a newline within the scope
+			# return no more NEWLINE token
+			t.lexer.pop_state()
+			return
+		if _g_indent[-1] < indent_num:
+			# new scope start with a bigger indent
+			t.type = 'INDENT'
+			_g_indent.append(indent_num)
+			t.lexer.pop_state()
+			return t
+		if _g_indent[-1] > indent_num:
+			# go through the indent stack, try to find the right indent level
+			# if can't, raise a exception
+			while len(_g_indent) > 0:
+				print(' Now indent stack top = %d, stack len = %d, line indent = %d' % (_g_indent[-1], len(_g_indent), indent_num))
+				if _g_indent[-1] == indent_num:
+					t.type = 'DEDENT'
+					t.lexer.pop_state()
+					return t
+				else:
+					_g_indent.pop(-1)
+					t.type = 'DEDENT'
+					t.value = None
+					t.lexer.lexpos -= len(strip_str)
+					return t
+	else:
+		# A new file without any indent yet.
+		# Lexer parser cannot realize an 'Unexpected indent' exception
+		# hoping yacc part could do that
+		_g_indent.append(indent_num)
+		t.type = 'INDENT'
+		t.lexer.pop_state()
+		return t
+
+
+
+
+def t_indent_pass(t):
+	r'\S+'
+	if len(_g_indent) > 0:
+		_g_indent.pop(-1)
+		t.lexer.lexpos -= len(t.value)
+		t.type = 'DEDENT'
+		t.value = None
+		return t
+	else:
+		t.lexer.pop_state()
+
 t_LPAREN = r'\('
 t_RPAREN = r'\)'
 t_COMMA = r','
@@ -181,7 +250,6 @@ t_TIMES = r'\*'
 t_DIVIDE = r'\/'
 t_ignore_COMMENT = r'\#.*'
 t_WHITESPACE = r'[ \t]+'
-t_NEWLINE = r'\n'
 t_ASSIGN = r'='
 t_EQUAL = r'=='
 t_COLON = r':'
@@ -203,13 +271,12 @@ t_SEMICO = r';'
 t_AUGASSIGN = r'\+=|\-=|\*=|\/=|\^=|\&=|\%=|\|=|<<=|>>=|\*\*=|\/\/='
 t_SKIM = r'\`'
 t_AT = r'@'
-t_INDENT = r'^\s'
 
 def main():
 	lexer = lex.lex()
 	out_file = open('.\\lexer_out.txt', 'w')
 	#with open('C:\\Python27\\Lib\\sha.py','r') as input_file:
-	with open('C:\\Python27\\Lib\\lib2to3\\test.py') as input_file:
+	with open('E:\\workspace\\pistachio\\Scripts\\test.py') as input_file:
 		input_text = input_file.read()
 		input_text.decode('utf-8')
 		lexer.input(input_text)
