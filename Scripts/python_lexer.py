@@ -3,6 +3,7 @@ import ply.lex as lex
 key_words = {
 	'class':'CLASS',
 	'def':'DEF',
+	'del':'DEL',
 	'if':'IF',
 	'else':'ELSE',
 	'elif':'ELIF',
@@ -25,7 +26,13 @@ key_words = {
 	'or':'OR',
 	'not':'NOT',
 	'assert':'ASSERT',
+	'print':'PRINT',
+	'pass':'PASS',
+	'global','GLOBAL'
+	'exec':'EXEC',
+	'finally':'FINALLY',
 }
+
 
 tokens = [
 	'LPAREN',
@@ -40,6 +47,7 @@ tokens = [
   	'BACKSLASH',
   	'PLUS',
   	'ASSIGN',
+  	'AUGASSIGN',
   	'EQUAL',
   	'NUMBER',
 	'MINUS',
@@ -72,8 +80,14 @@ tokens = [
 	'MOD',
 	'COMPLEMENT',
 	'POWER',
+	'SQRT',
 	'IDENTIFIER',
 	'CLASSDEFINE',
+	'SEMICO',
+	'SKIM',
+	'AT',
+	'INDENT',
+	'DEDENT',
 ] + list(key_words.values())
 
 states = (
@@ -184,6 +198,12 @@ t_RSHIFT = r'>>'
 t_MOD = r'%'
 t_COMPLEMENT = r'~'
 t_POWER = r'\*\*'
+t_SQRT = r'\/\/'
+t_SEMICO = r';'
+t_AUGASSIGN = r'\+=|\-=|\*=|\/=|\^=|\&=|\%=|\|=|<<=|>>=|\*\*=|\/\/='
+t_SKIM = r'\`'
+t_AT = r'@'
+t_INDENT = r'^\s'
 
 def main():
 	lexer = lex.lex()

@@ -1,0 +1,224 @@
+file_input: file_lines 
+		   | empty
+file_lines: newlines stmts
+stmts: stmt NEWLINE stmts 
+	  | stmt 
+	  | newlines
+newlines: NEWLINE newlines 
+		 | empty
+
+decorator: AT dotted_name
+		  | AT dotted_name LPAREN RPAREN NEWLINE
+		  | AT dotted_name LPAREN arglist RPAREN NEWLINE
+decorators: decorator decorators
+		   | decorator
+decorated: decorators classdef
+		  | decorators funcdef
+funcdef: DEF IDENTIFIER parameters COLON suite
+parameters: LPAREN RPAREN
+		   | LPAREN varargslist RPAREN
+varargslist: commonargs
+			| commonargs TIMES IDENTIFIER
+			| commonargs TIMES TIMES IDENTIFIER
+			| commonargs TIMES IDENTIFIER COMMA TIMES TIMES IDENTIFIER
+commonargs: commonarg COMMA commonargs
+		   | commonarg
+commonarg: fpdef
+		  | fpdef ASSIGN test
+fpdef: IDENTIFIER
+	  | LPAREN pflist RPAREN
+fplist: fpdef fpdefs
+fpdefs: COMMA fpdef fpdefs
+	   | COMMA fpdef
+	   | COMMA fpdef COMMA
+
+stmt: simple_stmt 
+	 | conpound_stmt
+simple_stmt: small_stmt small_stmts NEWLINE
+small_stmts: SEMICO small_stmts
+			| SEMICO small_stmt
+			| SEMICO small_stmt SEMICO
+small_stmt: expr_stmt
+		   | print_stmt
+		   | del_stmt
+		   | pass_stmt
+		   | flow_stmt
+		   | import_stmt
+		   | global_stmt
+		   | exec_stmt
+		   | assert_stmt
+expr_stmt->testlist AUGASSIGN yield_expr
+		   | testlist AUGASSIGN testlist
+		   | testlist ASSIGN yield_expr
+		   | testlist ASSIGN testlist
+
+print_stmt: PRINT test tests
+		   | PRINT test SHIFT test tests
+del_stmt: DEL exprlist
+pass_stmt: PASS
+flow_stmt: break_stmt
+		  | continue_stmt
+		  | return_stmt
+		  | raise_stmt
+		  | yield_stmt
+break_stmt: BREAK
+continue_stmt: CONTINUE
+return_stmt: RETURN
+			| RETURN testlist
+yield_stmt: yield_expr
+raise_stmt: RAISE
+		   | RAISE test
+		   | RAISE test COMMA test
+		   | RAISE test COMMA test COMMA test
+import_stmt: import_name
+			| import_from
+import_name: IMPORT dotted_as_names
+import_from: FROM pack_path IMPORT TIMES
+			| FROM pack_path IMPORT LPAREN import_as_names RPAREN
+			| FROM pack_path IMPORT import_as_names
+pack_path: dots
+		  | dots dotted_name
+		  | dotted_name
+dots: DOT dots
+	 | DOT
+import_as_name: IDENTIFIER
+			   | IDENTIFIER AS IDENTIFIER
+dotted_as_name: dotted_name
+			   | dotted_name AS IDENTIFIER
+import_as_names: import_as_name
+				| import_as_name COMMA import_as_names
+				| import_as_name COMMA
+dotted_as_names: dotted_as_name
+				| dotted_as_name COMMA dotted_as_names
+doted_name: IDENTIFIER
+		   | IDENTIFIER DOT doted_name
+global_stmt: GLOBAL IDENTIFIER identifiers
+identifiers: COMMA IDENTIFIER identifiers
+			| COMMA IDENTIFIER
+			| empty
+exec_stmt: EXEC expr
+		  | EXEC expr in test
+		  | EXEC expr in test COMMA test
+assert_stmt: ASSERT test
+			| ASSERT test COMMA test
+
+compound_stmt: if_stmt
+			  | while_stmt
+			  | for_stmt
+			  | try_stmt
+			  | with_stmt
+			  | funcdef
+			  | classdef
+			  | decorated
+if_stmt: IF test COLON suite elif_stmts
+elif_stmts: ELIF test COLON suite elif_stmts
+		   | ELSE COLON suite
+		   | empty
+whild_stmt: WHILE test COLON suite
+		   | WHILE test COLON suite ELSE COLON suite
+for_stmt: FOR exprlist IN testlist COLON suite
+		 | FOR exprlist IN testlist COLON suite ELSE COLON suite
+try_stmt: TRY COLON suite excepts
+		 | TRY COLON suite excepts ELSE COLON suite
+		 | TRY COLON suite excepts ELSE COLON suite FINALLY COLON suite
+		 | TRY COLON suite excepts FINALLY COLON suite
+excepts: except_clause COLON suite
+		| except_clause COLON suite excepts
+with_stmt: WITH with_item with_items COLON suite
+with_items: COMMA with_item with_items
+		   | empty
+with_item: test
+		  | test AS expr
+except_clause: EXCEPT
+			  | EXCEPT test
+			  | EXCEPT test AS test
+			  | EXCEPT test COMMA test
+suite: simple_stmt
+	  | NEWLINE INDENT stmt stmts DEDENT
+
+
+testlist->test COMMA testlist
+		  | test COMMA
+		  | test
+test->or_test ifelsetest | or_test | lambdef
+ifelsetest->IF or_test ELSE test
+or_test->and_test ortests
+ortests->OR and_test ortests | empty
+and_test->not_test andtests
+andtests->AND not_test andtests | emtpy
+not_test->NOT not_test | comparison
+comparison->expr comp_op_exprs
+comp_op_exprs->comp_op expr comp_op_exprs | empty
+comp_op->LESSTHAN | BIGGERTHAN | LESSEQUAL | BIGGEREQUAL | NOTEQUAL | IN | NOT | NOT IN | IS | IS NOT
+expr->xor_expr xor_exprs
+xor_exprs->BITOR xor_expr xor_exprs  | empty
+xor_expr->and_expr and_exprs
+and_exprs->BITAND and_expr and_exprs | empty
+shift_expr->arith_expr arith_exprs
+arith_exprs->LSHIFT arith_expr arith_exprs
+			| RSHIFT arith_expr arith_exprs
+			| empty
+arith_expr->term terms
+terms->PLUS term terms
+	  | MINUS term terms
+	  | empty
+term->factor factors
+factors->TIMES factor factors
+		 | DIVIDE factor factors
+		 | MOD factor factors
+		 | SQRT factor factors
+		 | empty
+factor->PLUS factor
+		| MINUS factor
+		| power
+power->atom trailers
+	   | atom trailers POWER factor
+trailers->trailer trailers | empty
+atom->LPAREN yield_expr RPAREN
+	  | LPAREN testlist_comp RPAREN
+	  | LSQABRACK listmaker RSQABRACK
+	  | LBRACE dictorsetmaker RBRACE
+	  | SKIM testlist1 SKIM
+	  | IDENTIFIER
+	  | number
+	  | strings
+number->INTEGER | HEX | OCT | FLOAT | COMPLEX
+strings->BASESTRING strings | LONGSTRING strings | BASESTRING | LONGSTRING
+listmaker->test list_for
+		   | test tests
+tests->COMMA tests
+	   | COMMA test COMMA
+testlist_comp->test comp_for
+			   | test tests
+lambdef->LAMBDA varargslist COLON test
+		 | LAMBDA COLON test
+
+trailer->LPAREN RPAREN
+		 | LPAREN arglist RPAREN
+		 | LSQABRACK RSQABRACK
+		 | LSQABRACK subscriptlist RSQABRACK
+		 | DOT IDENTIFIER
+subscriptlist->subscript subscripts
+subscripts->COMMA subscripts | subscript | subscript COMMA
+subscript->DOT DOT DOT
+		   | test
+		   | test COLON test
+		   | COLON test
+		   | test COLON
+		   | sliceop
+sliceop->COLON test
+		 | COLON
+exprlist->expr exprs
+exprs->COMMA exprs
+	   | expr
+	   | expr COMMA
+testlist->test tests
+dictorsetmaker->test COLON test
+				| test COLON test comp_for
+				| test COLON test COMMA dicttests
+				| test comp_for
+				| test tests
+dicttests->COMMA test COLON test dicttests
+		   | COMMA test COLON test COMMA
+
+
