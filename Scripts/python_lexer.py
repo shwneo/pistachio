@@ -188,7 +188,7 @@ def t_indent_end(t):
 			t.lexer.pop_state()
 			return
 		if _g_indent[-1] < indent_num:
-			# new scope start with a bigger indent
+			# new scope starts with a bigger indent
 			t.type = 'INDENT'
 			_g_indent.append(indent_num)
 			t.lexer.pop_state()
@@ -197,19 +197,20 @@ def t_indent_end(t):
 			# go through the indent stack, try to find the right indent level
 			# if can't, raise a exception
 			while len(_g_indent) > 0:
-				print(' Now indent stack top = %d, stack len = %d, line indent = %d' % (_g_indent[-1], len(_g_indent), indent_num))
 				if _g_indent[-1] == indent_num:
 					t.type = 'DEDENT'
 					t.lexer.pop_state()
 					return t
 				else:
 					_g_indent.pop(-1)
+					if len(_g_indent) == 0:
+						raise Exception('IndentationError: unindent does not match any outer indentation level')
 					t.type = 'DEDENT'
 					t.value = None
 					t.lexer.lexpos -= len(strip_str)
 					return t
 	else:
-		# A new file without any indent yet.
+		# Without any indent yet, mybe a new file, or a fresh top scope
 		# Lexer parser cannot realize an 'Unexpected indent' exception
 		# hoping yacc part could do that
 		_g_indent.append(indent_num)
@@ -217,12 +218,14 @@ def t_indent_end(t):
 		t.lexer.pop_state()
 		return t
 
-
-
-
 def t_indent_pass(t):
+	# A newline without any indent
 	r'\S+'
 	if len(_g_indent) > 0:
+		# clean all indents
+		# accroding to Python grammar
+		# we should return every 'DEDENT' token
+		# of scopes this statement closed
 		_g_indent.pop(-1)
 		t.lexer.lexpos -= len(t.value)
 		t.type = 'DEDENT'
@@ -249,7 +252,7 @@ t_MINUS = r'\-'
 t_TIMES = r'\*'
 t_DIVIDE = r'\/'
 t_ignore_COMMENT = r'\#.*'
-t_WHITESPACE = r'[ \t]+'
+t_WHITESPACE = r'[\s]+'
 t_ASSIGN = r'='
 t_EQUAL = r'=='
 t_COLON = r':'
@@ -272,13 +275,13 @@ t_AUGASSIGN = r'\+=|\-=|\*=|\/=|\^=|\&=|\%=|\|=|<<=|>>=|\*\*=|\/\/='
 t_SKIM = r'\`'
 t_AT = r'@'
 
+lexer = lex.lex()
+
 def main():
 	lexer = lex.lex()
-	out_file = open('.\\lexer_out.txt', 'w')
 	#with open('C:\\Python27\\Lib\\sha.py','r') as input_file:
-	with open('E:\\workspace\\pistachio\\Scripts\\test.py') as input_file:
+	with open('.\\test.py') as input_file:
 		input_text = input_file.read()
-		input_text.decode('utf-8')
 		lexer.input(input_text)
 		while True:
 			tok = lexer.token()
