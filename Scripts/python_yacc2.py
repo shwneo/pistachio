@@ -186,20 +186,6 @@ def p_factor(p):
 			   | power'''
 	pass
 
-"""
-def p_power(p):
-	r'''power : IDENTIFIER
-			  | NUMBER
-			  | INTEGER
-			  | HEX
-			  | OCT
-			  | FLOAT
-			  | COMPLEX
-			  | BASESTRING
-			  | LONGSTRING''';
-	pass
-"""
-
 def p_power(p):
 	r'''power : atom
 			  | atom POWER factor'''
@@ -230,33 +216,34 @@ def p_strings(p):
 	pass
 
 def p_more_strings(p):
-	r'''more_strings : SIGQUOT BASESTRING strings
-					 | DOUBLEQUOT BASESTRING strings
-					 | TRIPLEQUOT LONGSTRING strings
-					 | SIGQUOT BASESTRING
+	r'''more_strings : SIGQUOT BASESTRING
+					 | SIGQUOT BASESTRING strings
 					 | DOUBLEQUOT BASESTRING
-					 | TRIPLEQUOT LONGSTRING'''
+					 | DOUBLEQUOT BASESTRING strings
+					 | TRIPLEQUOT LONGSTRING
+					 | TRIPLEQUOT LONGSTRING strings'''
 	pass
 
 # testlist1: test (',' test)*
 def p_testlist1(p):
-	r'''testlist1 : test tests
+	r'''testlist1 : test COMMA tests
+				  | test COMMA test
 				  | test'''
 	pass
 
+
 def p_tests(p):
-	r'''tests : COMMA test more_tests
-			  | COMMA test'''
+	r'''tests : test COMMA more_tests'''
 	pass
 
 def p_more_tests(p):
-	r'''more_tests : COMMA tests
-				   | COMMA test'''
+	r'''more_tests : tests
+				   | test'''
 	pass
 
 def p_error(p):
 	if p is None:
-		return
+		raise Exception('Error : Unexpected file ending')
 	if p.type == 'WHITESPACE':
 		yacc.errok()
 	else:
