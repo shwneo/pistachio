@@ -1,14 +1,15 @@
 import ply.yacc as yacc
 from python_lexer import tokens
 
-def p_if_stmt(p):
-	r'''if_stmt : IF testlist COLON ELSE'''
-	print('success!');
+def p_stmt(p):
+	r'''stmt : testlist'''
+	print('2 succeed!')
 	pass
 
 def p_test(p):
 	r'''test : or_test
 			 | or_test IF or_test ELSE test'''
+	print('1 succeed!')
 	pass
 
 def p_or_test(p):
@@ -197,6 +198,7 @@ def p_power(p):
 
 def p_atom(p):
 	r'''atom : SKIM testlist1 SKIM
+			 | LSQABRACK listmaker RSQABRACK
 			 | IDENTIFIER
 			 | number
 			 | strings'''
@@ -245,23 +247,102 @@ def p_more_tests(p):
 				   | test'''
 	pass
 
-def p_testlist2(p):
-	r'''testlist2 : test COMMA
-				  | test COMMA tests_2'''
-	pass
-
-def p_tests_2(p):
-	r'''tests_2 : test COMMA more_tests2 COMMA'''
-	pass
-
-def p_more_tests_2(p):
-	r'''more_tests2 : tests_2
-					| test COMMA'''
-	pass
-
 def p_testlist(p):
-	r'''testlist : testlist1
-				 | testlist2'''
+	r'''testlist : testlists'''
+	pass
+
+def p_testlists(p):
+	r'''testlists : test COMMA testlists
+				  | test COMMA
+				  | test'''
+	pass
+
+def p_exprlist(p):
+	r'''exprlist : exprlists'''
+	pass
+
+def p_exprlists(p):
+	r'''exprlists : expr COMMA exprlists
+				  | expr COMMA
+				  | expr'''
+	pass
+
+def p_listmaker(p):
+	r'''listmaker : testlist
+				  | test list_for'''
+	pass
+
+def p_list_iter(p):
+	r'''list_iter : list_for
+				  | list_if'''
+	pass
+
+def p_list_for(p):
+	r'''list_for : FOR exprlist IN testlist_safe
+				 | FOR exprlist IN testlist_safe list_iter'''
+	pass
+
+def p_testlist_safe(p):
+	r'''testlist_safe : old_tests'''
+	pass
+
+def p_old_tests(p):
+	r'''old_tests : more_old_tests'''
+	pass
+
+def p_more_old_tests(p):
+	r'''more_old_tests : old_test COMMA more_old_tests
+					   | old_test COMMA
+					   | old_test'''
+	pass
+
+def p_list_if(p):
+	r'''list_if : IF old_test
+				| IF old_test comp_iter'''
+	pass
+
+def p_comp_iter(p):
+	r'''comp_iter : comp_for
+				  | comp_if'''
+	pass
+
+def p_comp_for(p):
+	r'''comp_for : FOR exprlist IN or_test
+				 | FOR exprlist IN or_test comp_iter'''
+	pass
+
+def p_comp_if(p):
+	r'''comp_if : IF old_test
+				| IF old_test comp_iter'''
+	pass
+
+def p_old_test(p):
+	r'''old_test : or_test
+				 | old_lambdef'''
+	pass
+
+def p_old_lambdef(p):
+	r'''old_lambdef : LAMBDA COLON old_test
+					| LAMBDA varargslist COLON old_test'''
+	pass
+
+def p_varargslist(p):
+	r'''varargslist : '''
+	pass
+
+def p_fplist(p):
+	r'''fplist : fpdefs'''
+	pass
+
+def p_fpdefs(p):
+	r'''fpdefs : fpdef COMMA fpdefs
+			   | fpdef COMMA
+			   | fpdef'''
+	pass
+
+def p_fpdef(p):
+	r'''fpdef : IDENTIFIER
+			  | LPAREN fplist RPAREN'''
 	pass
 
 def p_error(p):
