@@ -1,10 +1,14 @@
 import ply.yacc as yacc
 from python_lexer import tokens
 
+def p_if_stmt(p):
+	r'''if_stmt : IF testlist COLON ELSE'''
+	print('success!');
+	pass
+
 def p_test(p):
 	r'''test : or_test
 			 | or_test IF or_test ELSE test'''
-	print('success!');
 	pass
 
 def p_or_test(p):
@@ -239,6 +243,25 @@ def p_tests(p):
 def p_more_tests(p):
 	r'''more_tests : tests
 				   | test'''
+	pass
+
+def p_testlist2(p):
+	r'''testlist2 : test COMMA
+				  | test COMMA tests_2'''
+	pass
+
+def p_tests_2(p):
+	r'''tests_2 : test COMMA more_tests2 COMMA'''
+	pass
+
+def p_more_tests_2(p):
+	r'''more_tests2 : tests_2
+					| test COMMA'''
+	pass
+
+def p_testlist(p):
+	r'''testlist : testlist1
+				 | testlist2'''
 	pass
 
 def p_error(p):

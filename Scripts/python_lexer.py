@@ -233,10 +233,6 @@ def t_indent_pass(t):
 	else:
 		t.lexer.pop_state()
 
-def t_ASSIGN(t):
-	r'='
-	return t
-
 t_LPAREN = r'\('
 t_RPAREN = r'\)'
 t_COMMA = r','
@@ -256,7 +252,7 @@ t_TIMES = r'\*'
 t_DIVIDE = r'\/|\/\/'
 t_ignore_COMMENT = r'\#.*'
 t_WHITESPACE = r'[\s]+'
-#t_ASSIGN = r'='
+t_ASSIGN = r'='
 t_EQUAL = r'=='
 t_COLON = r':'
 t_LESSTHAN = r'<'
