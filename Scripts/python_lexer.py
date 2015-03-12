@@ -51,7 +51,6 @@ tokens = [
   	'ASSIGN',
   	'AUGASSIGN',
   	'EQUAL',
-  	'NUMBER',
 	'MINUS',
 	'TIMES',
 	'DIVIDE',
@@ -74,6 +73,7 @@ tokens = [
 	'LESSEQUAL',
 	'BIGGEREQUAL',
 	'NOTEQUAL',
+	'NOTEQUAL2',
 	'BITOR',
 	'BITAND',
 	'BITXOR',
@@ -82,7 +82,6 @@ tokens = [
 	'MOD',
 	'COMPLEMENT',
 	'POWER',
-	'SQRT',
 	'IDENTIFIER',
 	'CLASSDEFINE',
 	'SEMICO',
@@ -234,6 +233,10 @@ def t_indent_pass(t):
 	else:
 		t.lexer.pop_state()
 
+def t_ASSIGN(t):
+	r'='
+	return t
+
 t_LPAREN = r'\('
 t_RPAREN = r'\)'
 t_COMMA = r','
@@ -250,10 +253,10 @@ t_FLOAT = r'([0-9]*\.[0-9]+|[0-9]+\.[0-9]*)([eE][+-]?[0-9]+)?'
 t_PLUS = r'\+'
 t_MINUS = r'\-'
 t_TIMES = r'\*'
-t_DIVIDE = r'\/'
+t_DIVIDE = r'\/|\/\/'
 t_ignore_COMMENT = r'\#.*'
 t_WHITESPACE = r'[\s]+'
-t_ASSIGN = r'='
+#t_ASSIGN = r'='
 t_EQUAL = r'=='
 t_COLON = r':'
 t_LESSTHAN = r'<'
@@ -261,6 +264,7 @@ t_BIGGERTHAN = r'>'
 t_LESSEQUAL = r'<='
 t_BIGGEREQUAL = r'>='
 t_NOTEQUAL = r'!='
+t_NOTEQUAL2 = r'<>'
 t_BITOR = r'\|'
 t_BITAND = r'\&'
 t_BITXOR = r'\^'
@@ -269,7 +273,6 @@ t_RSHIFT = r'>>'
 t_MOD = r'%'
 t_COMPLEMENT = r'~'
 t_POWER = r'\*\*'
-t_SQRT = r'\/\/'
 t_SEMICO = r';'
 t_AUGASSIGN = r'\+=|\-=|\*=|\/=|\^=|\&=|\%=|\|=|<<=|>>=|\*\*=|\/\/='
 t_SKIM = r'\`'

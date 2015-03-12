@@ -186,6 +186,7 @@ def p_factor(p):
 			   | power'''
 	pass
 
+"""
 def p_power(p):
 	r'''power : IDENTIFIER
 			  | NUMBER
@@ -197,8 +198,65 @@ def p_power(p):
 			  | BASESTRING
 			  | LONGSTRING''';
 	pass
+"""
+
+def p_power(p):
+	r'''power : atom
+			  | atom POWER factor'''
+	pass
+
+def p_atom(p):
+	r'''atom : SKIM testlist1 SKIM
+			 | IDENTIFIER
+			 | number
+			 | strings'''
+	pass
+
+def p_number(p):
+	r'''number : INTEGER
+			   | HEX
+			   | OCT
+			   | FLOAT
+			   | COMPLEX'''
+	pass
+
+def p_strings(p):
+	r'''strings : SIGQUOT BASESTRING
+				| SIGQUOT BASESTRING more_strings
+				| DOUBLEQUOT BASESTRING
+				| DOUBLEQUOT BASESTRING more_strings
+				| TRIPLEQUOT LONGSTRING
+				| TRIPLEQUOT LONGSTRING more_strings'''
+	pass
+
+def p_more_strings(p):
+	r'''more_strings : SIGQUOT BASESTRING strings
+					 | DOUBLEQUOT BASESTRING strings
+					 | TRIPLEQUOT LONGSTRING strings
+					 | SIGQUOT BASESTRING
+					 | DOUBLEQUOT BASESTRING
+					 | TRIPLEQUOT LONGSTRING'''
+	pass
+
+# testlist1: test (',' test)*
+def p_testlist1(p):
+	r'''testlist1 : test tests
+				  | test'''
+	pass
+
+def p_tests(p):
+	r'''tests : COMMA test more_tests
+			  | COMMA test'''
+	pass
+
+def p_more_tests(p):
+	r'''more_tests : COMMA tests
+				   | COMMA test'''
+	pass
 
 def p_error(p):
+	if p is None:
+		return
 	if p.type == 'WHITESPACE':
 		yacc.errok()
 	else:
