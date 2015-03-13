@@ -2,13 +2,14 @@ import ply.yacc as yacc
 from python_lexer import tokens
 
 def p_stmt(p):
-	r'''stmt : testlist'''
+	r'''stmt : lambdef'''
 	print('2 succeed!')
 	pass
 
 def p_test(p):
 	r'''test : or_test
-			 | or_test IF or_test ELSE test'''
+			 | or_test IF or_test ELSE test
+			 | lambdef'''
 	print('1 succeed!')
 	pass
 
@@ -324,10 +325,21 @@ def p_old_test(p):
 def p_old_lambdef(p):
 	r'''old_lambdef : LAMBDA COLON old_test
 					| LAMBDA varargslist COLON old_test'''
+	print('Old Lambda reduced')
+	pass
+
+def p_labdef(p):
+	r'''lambdef : LAMBDA COLON test
+				| LAMBDA varargslist COLON test'''
+	print('Lambda reduced')
 	pass
 
 def p_varargslist(p):
-	r'''varargslist : '''
+	r'''varargslist : fpdef_args
+					| fpdef_args1
+					| fpdef_args TIMES IDENTIFIER
+					| fpdef_args TIMES IDENTIFIER POWER IDENTIFIER
+					| fpdef_args POWER IDENTIFIER'''
 	pass
 
 def p_fplist(p):
@@ -344,6 +356,32 @@ def p_fpdef(p):
 	r'''fpdef : IDENTIFIER
 			  | LPAREN fplist RPAREN'''
 	pass
+
+def p_fpdef_args(p):
+	r'''fpdef_args : fpdef_arg_list'''
+	pass
+
+def p_fpdef_arg_list(p):
+	r'''fpdef_arg_list : fpdef_arg COMMA fpdef_arg_list
+					   | fpdef_arg COMMA'''
+	pass
+
+def p_fpdef_args1(p):
+	r'''fpdef_args1 : fpdef_arg_list1'''
+	pass
+
+def p_fpdef_arg_list1(p):
+	r'''fpdef_arg_list1 : fpdef_arg COMMA fpdef_arg_list1
+						| fpdef_arg'''
+	pass
+
+
+
+def p_fpdef_arg(p):
+	r'''fpdef_arg : fpdef
+				  | fpdef ASSIGN test'''
+	pass
+
 
 def p_error(p):
 	if p is None:
