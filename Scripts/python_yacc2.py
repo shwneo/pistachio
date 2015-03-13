@@ -1,9 +1,59 @@
 import ply.yacc as yacc
 from python_lexer import tokens
 
+
 def p_stmt(p):
-	r'''stmt : lambdef'''
+	r'''stmt : simple_stmt'''
 	print('2 succeed!')
+	pass
+
+def p_decorator(p):
+	r'''decorator : AT dotted_name NEWLINE
+				  | AT dotted_name LPAREN RPAREN NEWLINE
+				  | AT dotted_name LPAREN arglist RPAREN NEWLINE'''
+	pass
+
+def p_decorators(p):
+	r'''decorators : many_decorators'''
+	pass
+
+def p_many_decorators(p):
+	r'''many_decorators : decorator many_decorators
+						| decorator'''
+	pass
+
+def p_decorated(p):
+	r'''decorated : decorators funcdef'''
+	pass
+
+def p_funcdef(p):
+	r'''funcdef :'''
+	pass
+
+def p_paramters(p):
+	r'''paramters : LPAREN RPAREN
+				  | LPAREN varargslist RPAREN'''
+	pass
+
+def p_simple_stmt(p):
+	r'''simple_stmt : small_stmts'''
+	pass
+
+def p_small_stmts(p):
+	r'''small_stmts : small_stmt SEMICO small_stmts
+					| small_stmt NEWLINE
+					| NEWLINE'''
+	pass
+
+def p_small_stmt(p):
+	r'''small_stmt : expr_stmt
+				   | print_stmt
+				   | del_stmt
+				   | pass_stmt
+				   | flow_stmt
+				   | global_stmt
+				   | exec_stmt
+				   | assert_stmt'''
 	pass
 
 def p_test(p):
@@ -154,6 +204,105 @@ def p_arith_expr(p):
 				   | term'''
 	pass
 
+def p_expr_stmt(p):
+	r'''expr_stmt : testlist AUGASSIGN yield_expr
+				  | testlist AUGASSIGN testlist
+				  | testlist assignments'''
+	pass
+
+def p_print_stmt(p):
+	r'''print_stmt : PRINT testlist
+				   | PRINT RSHIFT testlist'''
+	pass
+
+def p_del_stmt(p):
+	r'''del_stmt : DEL exprlist'''
+	pass
+
+def p_pass_stmt(p):
+	r'''pass_stmt : PASS'''
+	pass
+
+def p_flow_stmt(p):
+	r'''flow_stmt : break_stmt
+				  | continue_stmt
+				  | return_stmt
+				  | raise_stmt
+				  | yield_stmt'''
+	pass
+
+def p_break_stmt(p):
+	r'''break_stmt : BREAK'''
+	pass
+
+def p_continue_stmt(p):
+	r'''continue_stmt : CONTINUE'''
+	pass
+
+def p_return_stmt(p):
+	r'''return_stmt : RETURN
+					| RETURN testlist'''
+	pass
+
+def p_yield_stmt(p):
+	r'''yield_stmt : yield_expr'''
+	pass
+
+def p_raise_stmt(p):
+	r'''raise_stmt : RAISE
+				   | RAISE test
+				   | RAISE test COMMA test
+				   | RAISE test COMMA test COMMA test'''
+	pass
+
+
+def p_dotted_name(p):
+	r'''dotted_name : dotted_names'''
+	pass
+
+def p_dotted_names(p):
+	r'''dotted_names : IDENTIFIER DOT dotted_names
+			  		 | IDENTIFIER'''
+	pass
+
+def p_global_stmt(p):
+	r'''global_stmt : GLOBAL global_name'''
+	pass
+
+def p_global_name(p):
+	r'''global_name : global_names'''
+	pass
+
+def p_global_names(p):
+	r'''global_names : IDENTIFIER COMMA global_names
+					 | IDENTIFIER'''
+	pass
+
+def p_exec_stmt(p):
+	r'''exec_stmt : EXEC expr
+				  | EXEC expr IN test
+				  | EXEC expr IN test COMMA test'''
+	pass
+
+def p_assert_stmt(p):
+	r''' assert_stmt : ASSERT test
+					 | ASSERT test COMMA test'''
+	pass
+
+def p_expr_assignments(p):
+	r'''assignments : assignments_list'''
+	pass
+
+def p_assignments_list(p):
+	r'''assignments_list : assignment assignments_list
+						 | assignment'''
+	pass
+
+def p_assignment(p):
+	r'''assignment : ASSIGN yield_expr
+				   | ASSIGN testlist'''
+	pass
+
 def p_terms(p):
 	r'''terms : term PLUS more_terms
 			  | term MINUS more_terms'''
@@ -198,8 +347,9 @@ def p_power(p):
 	pass
 
 def p_atom(p):
-	r'''atom : SKIM testlist1 SKIM
+	r'''atom : LPAREN tuplemaker  RPAREN
 			 | LSQABRACK listmaker RSQABRACK
+			 | SKIM testlist1 SKIM
 			 | IDENTIFIER
 			 | number
 			 | strings'''
@@ -268,9 +418,53 @@ def p_exprlists(p):
 				  | expr'''
 	pass
 
+def p_tuplemaker(p):
+	r'''tuplemaker : yield_expr
+				   | testlist_comp'''
+	pass
+
 def p_listmaker(p):
 	r'''listmaker : testlist
 				  | test list_for'''
+	pass
+
+def p_testlist_comp(p):
+	r'''testlist_comp : test comp_for
+					  | testlist'''
+	pass
+
+def p_arglist(p):
+	r'''arglist : arguments
+				| TIMES test middle_arguments
+				| TIMES test
+				| TIMES test COMMA POWER test
+				| TIMES test middle_arguments COMMA POWER test
+				| POWER test'''
+	pass
+
+def p_arguments(p):
+	r'''arguments : normal_arguments'''
+	pass
+
+def p_arguemnts1(p):
+	r'''arguments1 : middle_arguments'''
+	pass
+
+def p_normal_arguments(p):
+	r'''normal_arguments : argument COMMA normal_arguments
+						 | argument COMMA
+						 | argument'''
+	pass
+
+def p_middle_arguments(p):
+	r'''middle_arguments : COMMA argument middle_arguments
+						 | COMMA argument'''
+	pass
+
+def p_argument(p):
+	r'''argument : test
+				 | test comp_for
+				 | test ASSIGN test'''
 	pass
 
 def p_list_iter(p):
@@ -375,13 +569,15 @@ def p_fpdef_arg_list1(p):
 						| fpdef_arg'''
 	pass
 
-
-
 def p_fpdef_arg(p):
 	r'''fpdef_arg : fpdef
 				  | fpdef ASSIGN test'''
 	pass
 
+def p_yield_expr(p):
+	r'''yield_expr : YIELD
+				   | YIELD testlist'''
+	pass
 
 def p_error(p):
 	if p is None:
