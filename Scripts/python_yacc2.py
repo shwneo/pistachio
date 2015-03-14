@@ -1,10 +1,30 @@
 import ply.yacc as yacc
 from python_lexer import tokens
 
+def p_file_input(p):
+	r'''file_input : inputs'''
+	print('file_input reduced')
+	pass
+
+def p_inputs(p):
+	r'''inputs : more_inputs'''
+	pass
+
+def p_more_inputs(p):
+	r'''more_inputs : stmt more_inputs
+					| NEWLINE more_inputs
+					| stmt
+					| NEWLINE'''
+	pass
 
 def p_stmt(p):
 	r'''stmt : simple_stmt'''
-	print('2 succeed!')
+	print('stmt reduced!')
+	pass
+
+def p_simple_stmt(p):
+	r'''simple_stmt : small_stmts'''
+	print('simple_stmt reduced')
 	pass
 
 def p_decorator(p):
@@ -35,14 +55,14 @@ def p_paramters(p):
 				  | LPAREN varargslist RPAREN'''
 	pass
 
-def p_simple_stmt(p):
-	r'''simple_stmt : small_stmts'''
+def p_small_stmts(p):
+	r'''small_stmts : more_small_stmts'''
 	pass
 
-def p_small_stmts(p):
-	r'''small_stmts : small_stmt SEMICO small_stmts
-					| small_stmt NEWLINE
-					| NEWLINE'''
+def p_more_small_stmts(p):
+	r'''more_small_stmts : small_stmt COLON more_small_stmts
+						 | small_stmt COLON
+						 | small_stmt'''
 	pass
 
 def p_small_stmt(p):
@@ -53,7 +73,32 @@ def p_small_stmt(p):
 				   | flow_stmt
 				   | global_stmt
 				   | exec_stmt
-				   | assert_stmt'''
+				   | assert_stmt
+				   | import_stmt'''
+	print('small_stmt reduced')
+	pass
+
+def p_import_stmt(p):
+	r'''import_stmt : import_name'''
+	print('import_stmt reduced')
+	pass
+
+def p_import_name(p):
+	r'''import_name : IMPORT dotted_as_names'''
+	pass
+
+def p_dotted_as_names(p):
+	r'''dotted_as_names : more_dotted_as_name'''
+	pass
+
+def p_more_dotted_as_name(p):
+	r'''more_dotted_as_name : dotted_as_name COMMA more_dotted_as_name
+							| dotted_as_name'''
+	pass
+
+def p_dotted_as_name(p):
+	r'''dotted_as_name : dotted_name
+					   | dotted_name AS IDENTIFIER'''
 	pass
 
 def p_test(p):
@@ -208,6 +253,7 @@ def p_expr_stmt(p):
 	r'''expr_stmt : testlist AUGASSIGN yield_expr
 				  | testlist AUGASSIGN testlist
 				  | testlist assignments'''
+	print('expr_stmt reduced')
 	pass
 
 def p_print_stmt(p):
@@ -444,6 +490,7 @@ def p_arglist(p):
 
 def p_arguments(p):
 	r'''arguments : normal_arguments'''
+	print('arguments reduced')
 	pass
 
 def p_arguemnts1(p):
@@ -583,16 +630,19 @@ def p_error(p):
 	if p is None:
 		raise Exception('Error : Unexpected file ending')
 	if p.type == 'WHITESPACE':
+		print('---------------WHITESPACE')
 		yacc.errok()
 	else:
-		raise Exception('Syntax Error : Unexpected ' + p.type)
+		print(dir(p))
+		raise Exception('Syntax Error : Unexpected ' + p.type +
+			' pos = %d' % p.lexpos)
 
 def p_empty(p):
     'empty :'
     pass
 
 if __name__ == '__main__':
-	yacc.yacc(debug=0)
+	yacc.yacc(debug=True)
 	parser = yacc.yacc()
 	with open('.\\test.py','r') as input_file:
 		input_text = input_file.read()

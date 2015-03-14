@@ -33,6 +33,7 @@ key_words = {
 	'global':'GLOBAL',
 	'exec':'EXEC',
 	'finally':'FINALLY',
+	'yield':'YIELD',
 }
 
 
@@ -165,9 +166,10 @@ def t_longstring_error(t):
 	process_string(t)
 
 def t_NEWLINE(t):
-	r'\n'
+	r'[\n]'
 	t.lexer.push_state('indent')
 	t.type = 'NEWLINE'
+	print('+++++++++++++++NEWLINE')
 	return t
 
 def t_indent_end(t):
@@ -221,8 +223,8 @@ def t_indent_pass(t):
 	# A newline without any indent
 	r'\S+'
 	if len(_g_indent) > 0:
-		# clean all indents
-		# accroding to Python grammar
+		# Clean all indents
+		# Accroding to Python grammar,
 		# we should return every 'DEDENT' token
 		# of scopes this statement closed
 		_g_indent.pop(-1)
@@ -232,6 +234,10 @@ def t_indent_pass(t):
 		return t
 	else:
 		t.lexer.pop_state()
+		# rollback to the beging of this token
+		# to prevent swallowing it
+		t.lexer.lexpos -= len(t.value)
+
 
 t_LPAREN = r'\('
 t_RPAREN = r'\)'
@@ -251,7 +257,7 @@ t_MINUS = r'\-'
 t_TIMES = r'\*'
 t_DIVIDE = r'\/|\/\/'
 t_ignore_COMMENT = r'\#.*'
-t_WHITESPACE = r'[\s]+'
+t_WHITESPACE = r'[ \t]+'
 t_ASSIGN = r'='
 t_EQUAL = r'=='
 t_COLON = r':'
