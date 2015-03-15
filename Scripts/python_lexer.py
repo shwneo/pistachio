@@ -42,6 +42,7 @@ tokens = [
   	'RPAREN',
   	'COMMA',
   	'DOT',
+  	'DOTS',
   	'LSQABRACK',
   	'RSQABRACK',
   	'LBRACE',
@@ -90,6 +91,7 @@ tokens = [
 	'AT',
 	'INDENT',
 	'DEDENT',
+	'EOF',
 ] + list(key_words.values())
 
 states = (
@@ -169,19 +171,18 @@ def t_NEWLINE(t):
 	r'[\n]'
 	t.lexer.push_state('indent')
 	t.type = 'NEWLINE'
-	print('+++++++++++++++NEWLINE')
 	return t
 
 def t_indent_end(t):
-	r'\s+'
-	if t.value[-1] == '\n':
+	r'[\s]+'
+	if len(t.value) > 1 and t.value[-1] == '\n':
 		t.type = 'WHITESPACE'
 		t.lexer.pop_state()
 		return t
+
 	#strip_str = t.value.strip('\n')
 	strip_str = t.value
 	indent_num = len(strip_str)
-	print('Indent space number = %d, stack len = %d' % (indent_num, len(_g_indent)))
 	if len(_g_indent) > 0:
 		if _g_indent[-1] == indent_num:
 			# just a newline within the scope
@@ -243,6 +244,7 @@ t_LPAREN = r'\('
 t_RPAREN = r'\)'
 t_COMMA = r','
 t_DOT = r'\.'
+t_DOTS = r'\.{2,}'
 t_LSQABRACK = r'\[' 
 t_RSQABRACK = r'\]'
 t_LBRACE = r'\{'

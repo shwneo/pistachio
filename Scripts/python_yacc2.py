@@ -1,4 +1,5 @@
 import ply.yacc as yacc
+import ply.lex as lex
 from python_lexer import tokens
 
 def p_file_input(p):
@@ -13,12 +14,13 @@ def p_inputs(p):
 def p_more_inputs(p):
 	r'''more_inputs : stmt more_inputs
 					| NEWLINE more_inputs
-					| stmt
-					| NEWLINE'''
+					| stmt NEWLINE
+					| stmt'''
 	pass
 
 def p_stmt(p):
-	r'''stmt : simple_stmt'''
+	r'''stmt : simple_stmt
+			 | compund_stmt'''
 	print('stmt reduced!')
 	pass
 
@@ -79,7 +81,8 @@ def p_small_stmt(p):
 	pass
 
 def p_import_stmt(p):
-	r'''import_stmt : import_name'''
+	r'''import_stmt : import_name
+					| import_from'''
 	print('import_stmt reduced')
 	pass
 
@@ -99,6 +102,38 @@ def p_more_dotted_as_name(p):
 def p_dotted_as_name(p):
 	r'''dotted_as_name : dotted_name
 					   | dotted_name AS IDENTIFIER'''
+	pass
+
+def p_import_from(p):
+	r'''import_from : FROM dotted_name import_part
+					| FROM one_or_more_dots dotted_name import_part
+					| FROM one_or_more_dots import_part'''
+	pass
+
+def p_one_or_more_dots(p):
+	r'''one_or_more_dots : DOT
+						 | DOTS'''
+	pass
+
+def p_import_part(p):
+	r'''import_part : IMPORT TIMES
+					| IMPORT LPAREN import_as_names RPAREN
+					| IMPORT import_as_names'''
+	pass
+
+def p_import_as_names(p):
+	r'''import_as_names : import_as_name_list'''
+	pass
+
+def p_import_as_name_list(p):
+	r'''import_as_name_list : import_as_name COMMA import_as_name_list
+							| import_as_name COMMA
+							| import_as_name'''
+	pass
+
+def p_import_as_name(p):
+	r'''import_as_name : IDENTIFIER
+					   | IDENTIFIER AS IDENTIFIER'''
 	pass
 
 def p_test(p):
@@ -333,6 +368,56 @@ def p_exec_stmt(p):
 def p_assert_stmt(p):
 	r''' assert_stmt : ASSERT test
 					 | ASSERT test COMMA test'''
+	pass
+
+def p_compund_stmt(p):
+	r'''compund_stmt : if_stmt'''
+	pass
+
+def p_if_stmt(p):
+	r'''if_stmt : IF test COLON suite
+				| IF test COLON suite elif_stmts
+				| IF test COLON suite elif_stmts ELSE COLON suite'''
+	print('if_stmt reduced')
+	pass
+
+def p_elif_stmts(p):
+	r'''elif_stmts : more_elif_stmts'''
+	pass
+
+def p_more_elif_stmts(p):
+	r'''more_elif_stmts : elif_stmt more_elif_stmts
+						| elif_stmt'''
+	pass
+
+def p_elif_stmt(p):
+	r'''elif_stmt : ELIF test COLON suite'''
+	pass
+
+def p_while_stmt(p):
+	r'''while_stmt : WHILE test COLON suite
+				   | WHILE test COLON suite ELSE COLON suite'''
+	pass
+
+def p_for_stmt(p):
+	r'''for_stmt : FOR exprlist IN testlist COLON suite
+				 | FOR exprlist IN testlist COLON suite ELSE COLON suite'''
+	pass
+
+def p_suite(p):
+	r'''suite : simple_stmt
+			  | NEWLINE INDENT inputs DEDENT'''
+	print('suite reduced')
+	pass
+
+def p_stmts(p):
+	r'''stmts : more_stmts'''
+	pass
+
+def p_more_stmts(p):
+	r'''more_stmts : stmt more_stmts
+				   | stmt
+				   | NEWLINE'''
 	pass
 
 def p_expr_assignments(p):
@@ -628,12 +713,14 @@ def p_yield_expr(p):
 
 def p_error(p):
 	if p is None:
-		raise Exception('Error : Unexpected file ending')
+		# raise Exception('Error : Unexpected file ending')
+		tok = lex.LexToken()
+		tok.type = 'NEWLINE'
+		tok.value = None
+		return tok
 	if p.type == 'WHITESPACE':
-		print('---------------WHITESPACE')
 		yacc.errok()
 	else:
-		print(dir(p))
 		raise Exception('Syntax Error : Unexpected ' + p.type +
 			' pos = %d' % p.lexpos)
 
