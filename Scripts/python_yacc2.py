@@ -2,6 +2,7 @@ import ply.yacc as yacc
 import ply.lex as lex
 from python_lexer import tokens
 
+
 def p_file_input(p):
 	r'''file_input : inputs'''
 	print('file_input reduced')
@@ -20,7 +21,7 @@ def p_more_inputs(p):
 
 def p_stmt(p):
 	r'''stmt : simple_stmt
-			 | compund_stmt'''
+			 | compound_stmt'''
 	print('stmt reduced!')
 	pass
 
@@ -49,7 +50,8 @@ def p_decorated(p):
 	pass
 
 def p_funcdef(p):
-	r'''funcdef :'''
+	r'''funcdef : DEF IDENTIFIER paramters COLON suite'''
+	print('funcdef reduced')
 	pass
 
 def p_paramters(p):
@@ -62,8 +64,8 @@ def p_small_stmts(p):
 	pass
 
 def p_more_small_stmts(p):
-	r'''more_small_stmts : small_stmt COLON more_small_stmts
-						 | small_stmt COLON
+	r'''more_small_stmts : small_stmt SEMICO more_small_stmts
+						 | small_stmt SEMICO
 						 | small_stmt'''
 	pass
 
@@ -287,7 +289,8 @@ def p_arith_expr(p):
 def p_expr_stmt(p):
 	r'''expr_stmt : testlist AUGASSIGN yield_expr
 				  | testlist AUGASSIGN testlist
-				  | testlist assignments'''
+				  | testlist assignments
+				  | testlist'''
 	print('expr_stmt reduced')
 	pass
 
@@ -370,12 +373,20 @@ def p_assert_stmt(p):
 					 | ASSERT test COMMA test'''
 	pass
 
-def p_compund_stmt(p):
-	r'''compund_stmt : if_stmt'''
+def p_compound_stmt(p):
+	r'''compound_stmt : if_stmt
+					 | while_stmt
+					 | for_stmt
+					 | try_stmt
+					 | with_stmt
+					 | funcdef
+					 | classdef
+					 | decorated'''
 	pass
 
 def p_if_stmt(p):
 	r'''if_stmt : IF test COLON suite
+				| IF test COLON suite ELSE COLON suite
 				| IF test COLON suite elif_stmts
 				| IF test COLON suite elif_stmts ELSE COLON suite'''
 	print('if_stmt reduced')
@@ -392,16 +403,58 @@ def p_more_elif_stmts(p):
 
 def p_elif_stmt(p):
 	r'''elif_stmt : ELIF test COLON suite'''
+	print('elif_stmt reduced')
 	pass
 
 def p_while_stmt(p):
 	r'''while_stmt : WHILE test COLON suite
 				   | WHILE test COLON suite ELSE COLON suite'''
+	print('while_stmt reduced')
 	pass
 
 def p_for_stmt(p):
 	r'''for_stmt : FOR exprlist IN testlist COLON suite
 				 | FOR exprlist IN testlist COLON suite ELSE COLON suite'''
+	print('for_stmt reduced')
+	pass
+
+def p_try_stmt(p):
+	r'''try_stmt : TRY COLON suite except_clauses COLON suite
+				 | TRY COLON suite except_clauses COLON suite ELSE COLON suite
+				 | TRY COLON suite except_clauses COLON suite ELSE COLON suite FINALLY COLON suite
+				 | TRY COLON suite except_clauses COLON suite FINALLY COLON suite'''
+	pass
+
+def p_with_stmt(p):
+	r'''with_stmt : WITH with_item COLON suite
+				  | WITH with_item COMMA with_items COLON suite'''
+	print('with_stmt reduced')
+	pass
+
+def p_with_items(p):
+	r'''with_items : with_item COMMA with_items
+				   | with_item'''
+	pass
+
+def p_with_item(p):
+	r'''with_item : test
+				  | test AS expr'''
+	pass
+
+def p_except_clauses(p):
+	r'''except_clauses : more_except_clauses'''
+	pass
+
+def p_more_except_clauses(p):
+	r'''more_except_clauses : except_clause more_except_clauses
+							| except_clause'''
+	pass
+
+def p_except_clause(p):
+	r'''except_clause : EXCEPT
+					  | EXCEPT test
+					  | EXCEPT test AS test
+					  | EXCEPT test COMMA test'''
 	pass
 
 def p_suite(p):
@@ -474,12 +527,63 @@ def p_factor(p):
 
 def p_power(p):
 	r'''power : atom
+			  | atom trailers
+			  | atom trailers POWER factor
 			  | atom POWER factor'''
+	pass
+
+def p_trailers(p):
+	r'''trailers : more_trailers'''
+	pass
+
+def p_more_tailers(p):
+	r'''more_trailers : trailer more_trailers
+					  | trailer'''
+	pass
+
+def p_tailer(p):
+	r'''trailer : LPAREN RPAREN
+				| LPAREN arglist RPAREN
+				| LSQABRACK subscriptlist RSQABRACK
+				| DOT IDENTIFIER'''
+	print('trailer reduced')
+	pass
+
+def p_subscriptlist(p):
+	r'''subscriptlist : subscriptlists'''
+	pass
+
+def p_subscriptlists(p):
+	r'''subscriptlists : subscript COMMA subscriptlists
+					   | subscript COMMA
+					   | subscript'''
+	pass
+
+def p_subscript(p):
+	r'''subscript : DOT DOT DOT
+				  | test
+				  | test COLON test sliceop
+				  | test COLON test
+				  | test COLON sliceop
+				  | test COLON
+				  | COLON test sliceop
+				  | COLON test
+				  | COLON sliceop
+				  | COLON'''
+	pass
+
+def p_sliceop(p):
+	r'''sliceop : COLON test
+				| COLON'''
 	pass
 
 def p_atom(p):
 	r'''atom : LPAREN tuplemaker  RPAREN
+			 | LPAREN RPAREN
 			 | LSQABRACK listmaker RSQABRACK
+			 | LSQABRACK RSQABRACK
+			 | LBRACE dictorsetmaker RBRACE
+			 | LBRACE RBRACE
 			 | SKIM testlist1 SKIM
 			 | IDENTIFIER
 			 | number
@@ -554,14 +658,33 @@ def p_tuplemaker(p):
 				   | testlist_comp'''
 	pass
 
+def p_testlist_comp(p):
+	r'''testlist_comp : test comp_for
+					  | testlist'''
+	pass
+
 def p_listmaker(p):
 	r'''listmaker : testlist
 				  | test list_for'''
 	pass
 
-def p_testlist_comp(p):
-	r'''testlist_comp : test comp_for
-					  | testlist'''
+def p_dictorsetmaker(p):
+	r'''dictorsetmaker : test COLON test
+					   | test COLON test COMMA test_colon_list
+					   | test COLON test comp_for
+					   | test comp_for
+					   | testlist'''
+	print('dictorsetmaker reduced')
+	pass
+
+def p_test_colon_list(p):
+	r'''test_colon_list : more_test_colons'''
+	pass
+
+def p_more_test_colons(p):
+	r'''more_test_colons : test COLON test COMMA more_test_colons
+						 | test COLON test COMMA
+						 | test COLON test'''
 	pass
 
 def p_arglist(p):
@@ -571,6 +694,7 @@ def p_arglist(p):
 				| TIMES test COMMA POWER test
 				| TIMES test middle_arguments COMMA POWER test
 				| POWER test'''
+	print('arglist reduced')
 	pass
 
 def p_arguments(p):
@@ -597,6 +721,13 @@ def p_argument(p):
 	r'''argument : test
 				 | test comp_for
 				 | test ASSIGN test'''
+	pass
+
+def p_classdef(p):
+	r'''classdef : CLASS IDENTIFIER COLON suite
+				 | CLASS IDENTIFIER LPAREN RPAREN COLON suite
+				 | CLASS IDENTIFIER LPAREN testlist RPAREN COLON suite'''
+	print('classdef reduced')
 	pass
 
 def p_list_iter(p):

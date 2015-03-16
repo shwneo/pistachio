@@ -1,6 +1,7 @@
 import ply.lex as lex
 
 _g_indent = []
+_g_lcontinue = False
 
 key_words = {
 	'class':'CLASS',
@@ -169,12 +170,16 @@ def t_longstring_error(t):
 
 def t_NEWLINE(t):
 	r'[\n]'
+	global _g_lcontinue
+	if _g_lcontinue:
+		_g_lcontinue = False
+		return
 	t.lexer.push_state('indent')
 	t.type = 'NEWLINE'
 	return t
 
 def t_indent_end(t):
-	r'[\s]+'
+	r'[ \t]+'
 	if len(t.value) > 1 and t.value[-1] == '\n':
 		t.type = 'WHITESPACE'
 		t.lexer.pop_state()
@@ -222,7 +227,7 @@ def t_indent_end(t):
 
 def t_indent_pass(t):
 	# A newline without any indent
-	r'\S+'
+	r'\S+|\n'
 	if len(_g_indent) > 0:
 		# Clean all indents
 		# Accroding to Python grammar,
@@ -239,6 +244,15 @@ def t_indent_pass(t):
 		# to prevent swallowing it
 		t.lexer.lexpos -= len(t.value)
 
+def t_BACKSLASH(t):
+	r'\\'
+	global _g_lcontinue
+	_g_lcontinue = True
+
+def t_WHITESPACE(t):
+	r'[ \t]+'
+	global _g_lcontinue
+	_g_lcontinue = False
 
 t_LPAREN = r'\('
 t_RPAREN = r'\)'
@@ -250,7 +264,7 @@ t_RSQABRACK = r'\]'
 t_LBRACE = r'\{'
 t_RBRACE = r'\}'
 t_SLASH = r'\/'
-t_BACKSLASH = r'\\'
+#t_BACKSLASH = r'\\'
 t_INTEGER = r'\d+([eE][+-]?\d+)?[Ll]?'
 t_HEX = r'0x[0-9a-fA-F]+[Ll]?$'
 t_FLOAT = r'([0-9]*\.[0-9]+|[0-9]+\.[0-9]*)([eE][+-]?[0-9]+)?'
@@ -259,7 +273,6 @@ t_MINUS = r'\-'
 t_TIMES = r'\*'
 t_DIVIDE = r'\/|\/\/'
 t_ignore_COMMENT = r'\#.*'
-t_WHITESPACE = r'[ \t]+'
 t_ASSIGN = r'='
 t_EQUAL = r'=='
 t_COLON = r':'
