@@ -3,6 +3,15 @@ import ply.lex as lex
 _g_indent = []
 _g_lcontinue = False
 
+_g_barrier_scope = { 'in_scope':False,
+					 'character':None,
+					 'count':0,
+					 'barrier_couple':{
+					 	')':'(',
+					 	']':'[',
+					 	'}':'{'}
+					}
+
 key_words = {
 	'class':'CLASS',
 	'def':'DEF',
@@ -66,6 +75,9 @@ tokens = [
 	'SIGQUOT',
 	'DOUBLEQUOT',
 	'TRIPLEQUOT',
+	'RUSIGQUOT',
+	'RUDOUBLEQUOT',
+	'RUTRIPLEQUOT',
 	'WHITESPACE',
 	'NEWLINE',
 	'COLON',
@@ -93,6 +105,7 @@ tokens = [
 	'INDENT',
 	'DEDENT',
 	'EOF',
+	'STRMODIF',
 ] + list(key_words.values())
 
 states = (
@@ -100,6 +113,27 @@ states = (
    ('longstring', 'exclusive'),
    ('indent', 'exclusive')
 )
+
+def t_RUTRIPLEQUOT(t):
+	r'(r?|u?)[\'\"]{3}'
+	t.type = 'TRIPLEQUOT'
+	if t.value[-1] == '\'':
+		t.value = '\'\'\''
+	else:
+		t.value = '\"\"\"'
+	return start_string(t, True)
+
+def t_RUDOUBLEQUOT(t):
+	r'(r?|u?)\"'
+	t.type = 'DOUBLEQUOT'
+	t.value = '\"'
+	return start_string(t)
+
+def t_RUSIGQUOT(t):
+	r'(r?|u?)\''
+	t.type = 'SIGQUOT'
+	t.value = '\''
+	return start_string(t)
 
 def t_IDENTIFIER(t):
 	r'[_a-zA-Z][\d\w]*'
@@ -124,18 +158,6 @@ def start_string(t, long_str=False):
 	else:
 		t.lexer.push_state('longstring')
 	return t
-
-def t_TRIPLEQUOT(t):
-	r'[\'\"]{3}'
-	return start_string(t, True)
-
-def t_DOUBLEQUOT(t):
-	r'\"'
-	return start_string(t)
-
-def t_SIGQUOT(t):
-	r'\''
-	return start_string(t)
 
 def t_basestring_end(t):
 	r'[\'\"]'
@@ -171,23 +193,33 @@ def t_longstring_error(t):
 def t_NEWLINE(t):
 	r'[\n]'
 	global _g_lcontinue
+	global _g_barrier_scope
 	if _g_lcontinue:
 		_g_lcontinue = False
 		return
+	if _g_barrier_scope['in_scope']:
+		t.type = 'WHITESPACE'
+		t.value = None
+		return t
 	t.lexer.push_state('indent')
 	t.type = 'NEWLINE'
 	return t
 
+def t_indent_blankline(t):
+	r'[ \t]*\n'
+	t.type = 'NEWLINE'
+	t.value = None
+	# DONT pop_state!
+	# because of the '\n'
+	# we're still in the 'indent' mode
+	return t
+
 def t_indent_end(t):
 	r'[ \t]+'
-	if len(t.value) > 1 and t.value[-1] == '\n':
-		t.type = 'WHITESPACE'
-		t.lexer.pop_state()
-		return t
 
-	#strip_str = t.value.strip('\n')
 	strip_str = t.value
 	indent_num = len(strip_str)
+	global _g_indent
 	if len(_g_indent) > 0:
 		if _g_indent[-1] == indent_num:
 			# just a newline within the scope
@@ -227,7 +259,8 @@ def t_indent_end(t):
 
 def t_indent_pass(t):
 	# A newline without any indent
-	r'\S+|\n'
+	r'\S+'
+	global _g_indent
 	if len(_g_indent) > 0:
 		# Clean all indents
 		# Accroding to Python grammar,
@@ -254,15 +287,63 @@ def t_WHITESPACE(t):
 	global _g_lcontinue
 	_g_lcontinue = False
 
-t_LPAREN = r'\('
-t_RPAREN = r'\)'
+def left_barrier_scope(character):
+	global _g_barrier_scope
+	if _g_barrier_scope['in_scope']:
+		if _g_barrier_scope['character'] == character:
+			_g_barrier_scope['count'] += 1
+		else:
+			return
+	else:
+		_g_barrier_scope['in_scope'] = True
+		_g_barrier_scope['character'] = character
+		_g_barrier_scope['count'] = 1
+
+def right_barrier_scope(character):
+	global _g_barrier_scope
+	if _g_barrier_scope['in_scope']:
+		if _g_barrier_scope['character'] ==\
+				_g_barrier_scope['barrier_couple'].get(character):
+			_g_barrier_scope['count'] -= 1
+			if _g_barrier_scope['count'] == 0:
+				_g_barrier_scope['character'] = None
+				_g_barrier_scope['in_scope'] = False
+	else:
+		raise Exception('Unexpected '+ character)
+
+def t_LPAREN(t):
+	r'\('
+	left_barrier_scope(t.value)
+	return t
+
+def t_RPAREN(t):
+	r'\)'
+	right_barrier_scope(t.value)
+	return t
+
+def t_LSQABRACK(t):
+	r'\['
+	left_barrier_scope(t.value)
+	return t
+
+def t_RSQABRACK(t):
+	r'\]'
+	right_barrier_scope(t.value)
+	return t
+
+def t_LBRACE(t):
+	r'\{'
+	left_barrier_scope(t.value)
+	return t
+
+def t_RBRACE(t):
+	r'\}'
+	right_barrier_scope(t.value)
+	return t
+
 t_COMMA = r','
 t_DOT = r'\.'
 t_DOTS = r'\.{2,}'
-t_LSQABRACK = r'\[' 
-t_RSQABRACK = r'\]'
-t_LBRACE = r'\{'
-t_RBRACE = r'\}'
 t_SLASH = r'\/'
 #t_BACKSLASH = r'\\'
 t_INTEGER = r'\d+([eE][+-]?\d+)?[Ll]?'

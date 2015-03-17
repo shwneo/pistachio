@@ -2,7 +2,6 @@ import ply.yacc as yacc
 import ply.lex as lex
 from python_lexer import tokens
 
-
 def p_file_input(p):
 	r'''file_input : inputs'''
 	print('file_input reduced')
@@ -15,7 +14,7 @@ def p_inputs(p):
 def p_more_inputs(p):
 	r'''more_inputs : stmt more_inputs
 					| NEWLINE more_inputs
-					| stmt NEWLINE
+					| NEWLINE
 					| stmt'''
 	pass
 
@@ -795,7 +794,7 @@ def p_varargslist(p):
 	r'''varargslist : fpdef_args
 					| fpdef_args1
 					| fpdef_args TIMES IDENTIFIER
-					| fpdef_args TIMES IDENTIFIER POWER IDENTIFIER
+					| fpdef_args TIMES IDENTIFIER COMMA POWER IDENTIFIER
 					| fpdef_args POWER IDENTIFIER'''
 	pass
 
@@ -862,6 +861,7 @@ def p_empty(p):
 if __name__ == '__main__':
 	yacc.yacc(debug=True)
 	parser = yacc.yacc()
-	with open('.\\test.py','r') as input_file:
-		input_text = input_file.read()
+	#with open('.\\test.py','r') as input_file:
+	with open('E:\\workspace\\django-django-1.7a2-3175-g71c638f\\django-django-71c638f\\django\\http\\request.py', 'r') as input_file:
+		input_text = input_file.read() + '\npass' # ugly, but it works
 		res = parser.parse(input_text)
