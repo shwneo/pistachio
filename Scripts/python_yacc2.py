@@ -637,6 +637,7 @@ def p_more_tests(p):
 
 def p_testlist(p):
 	r'''testlist : testlists'''
+	print('testlist reduced')
 	pass
 
 def p_testlists(p):
@@ -672,15 +673,16 @@ def p_listmaker(p):
 
 def p_dictorsetmaker(p):
 	r'''dictorsetmaker : test COLON test
-					   | test COLON test COMMA test_colon_list
 					   | test COLON test comp_for
+					   | test COLON test COMMA test_colon_list
 					   | test comp_for
 					   | testlist'''
 	print('dictorsetmaker reduced')
 	pass
 
 def p_test_colon_list(p):
-	r'''test_colon_list : more_test_colons'''
+	r'''test_colon_list : more_test_colons
+						| empty'''
 	pass
 
 def p_more_test_colons(p):
@@ -694,6 +696,7 @@ def p_arglist(p):
 				| arglists1
 				| arglists1 TIMES test middle_arguments
 				| arglists1 TIMES test middle_arguments COMMA POWER test
+				| arglists1 TIMES test COMMA POWER test
 				| arglists1 TIMES test
 				| arglists1 POWER test
 				| TIMES test COMMA POWER test
@@ -796,7 +799,9 @@ def p_varargslist(p):
 					| fpdef_args1
 					| fpdef_args TIMES IDENTIFIER
 					| fpdef_args TIMES IDENTIFIER COMMA POWER IDENTIFIER
-					| fpdef_args POWER IDENTIFIER'''
+					| fpdef_args POWER IDENTIFIER
+					| TIMES IDENTIFIER COMMA POWER IDENTIFIER
+					| POWER IDENTIFIER'''
 	pass
 
 def p_fplist(p):
@@ -840,6 +845,7 @@ def p_fpdef_arg(p):
 def p_yield_expr(p):
 	r'''yield_expr : YIELD
 				   | YIELD testlist'''
+	print('yield_expr reduced')
 	pass
 
 def p_error(p):
@@ -863,6 +869,6 @@ if __name__ == '__main__':
 	yacc.yacc(debug=True)
 	parser = yacc.yacc()
 	#with open('.\\test.py','r') as input_file:
-	with open('C:\\Users\\IBM_ADMIN\\workspace\\django-django-d9a30ed\\django\\http\\cookie.py', 'r') as input_file:
+	with open('E:\\workspace\\django-django-1.7a2-3175-g71c638f\\django-django-71c638f\\django\\contrib\\admin\\widgets.py', 'r') as input_file:
 		input_text = input_file.read() + '\npass' # ugly, but it works
 		res = parser.parse(input_text)

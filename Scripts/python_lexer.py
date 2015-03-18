@@ -207,7 +207,7 @@ def t_NEWLINE(t):
 
 def t_indent_blankline(t):
 	r'[ \t]*\n'
-	t.type = 'NEWLINE'
+	t.type = 'WHITESPACE'
 	t.value = None
 	# DONT pop_state!
 	# because of the '\n'
@@ -215,7 +215,7 @@ def t_indent_blankline(t):
 	return t
 
 def t_indent_comment(t):
-	r'''[\t]*\#.*\n'''
+	r'''[ \t]*\#.*\n'''
 	pass
 
 def t_indent_end(t):
