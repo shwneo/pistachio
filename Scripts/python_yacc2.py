@@ -33,6 +33,7 @@ def p_decorator(p):
 	r'''decorator : AT dotted_name NEWLINE
 				  | AT dotted_name LPAREN RPAREN NEWLINE
 				  | AT dotted_name LPAREN arglist RPAREN NEWLINE'''
+	print('decorator reduced :')
 	pass
 
 def p_decorators(p):
@@ -45,12 +46,13 @@ def p_many_decorators(p):
 	pass
 
 def p_decorated(p):
-	r'''decorated : decorators funcdef'''
+	r'''decorated : decorators funcdef
+				  | decorators classdef'''
 	pass
 
 def p_funcdef(p):
 	r'''funcdef : DEF IDENTIFIER paramters COLON suite'''
-	print('funcdef reduced')
+	print('funcdef reduced : ' + p[2])
 	pass
 
 def p_paramters(p):
@@ -421,7 +423,8 @@ def p_try_stmt(p):
 	r'''try_stmt : TRY COLON suite except_clauses COLON suite
 				 | TRY COLON suite except_clauses COLON suite ELSE COLON suite
 				 | TRY COLON suite except_clauses COLON suite ELSE COLON suite FINALLY COLON suite
-				 | TRY COLON suite except_clauses COLON suite FINALLY COLON suite'''
+				 | TRY COLON suite except_clauses COLON suite FINALLY COLON suite
+				 | TRY COLON suite FINALLY COLON suite'''
 	pass
 
 def p_with_stmt(p):
@@ -687,33 +690,31 @@ def p_more_test_colons(p):
 	pass
 
 def p_arglist(p):
-	r'''arglist : arguments
-				| TIMES test middle_arguments
-				| TIMES test
+	r'''arglist : arglists
+				| arglists1
+				| arglists1 TIMES test middle_arguments
+				| arglists1 TIMES test middle_arguments COMMA POWER test
+				| arglists1 TIMES test
+				| arglists1 POWER test
 				| TIMES test COMMA POWER test
-				| TIMES test middle_arguments COMMA POWER test
+				| TIMES test
 				| POWER test'''
 	print('arglist reduced')
-	pass
-
-def p_arguments(p):
-	r'''arguments : normal_arguments'''
-	print('arguments reduced')
-	pass
-
-def p_arguemnts1(p):
-	r'''arguments1 : middle_arguments'''
-	pass
-
-def p_normal_arguments(p):
-	r'''normal_arguments : argument COMMA normal_arguments
-						 | argument COMMA
-						 | argument'''
 	pass
 
 def p_middle_arguments(p):
 	r'''middle_arguments : COMMA argument middle_arguments
 						 | COMMA argument'''
+	pass
+
+def p_arglists(p):
+	r'''arglists : argument COMMA arglists
+				 | argument'''
+	pass
+
+def p_arglists1(p):
+	r'''arglists1 : argument COMMA arglists1
+				  | argument COMMA'''
 	pass
 
 def p_argument(p):
@@ -726,7 +727,7 @@ def p_classdef(p):
 	r'''classdef : CLASS IDENTIFIER COLON suite
 				 | CLASS IDENTIFIER LPAREN RPAREN COLON suite
 				 | CLASS IDENTIFIER LPAREN testlist RPAREN COLON suite'''
-	print('classdef reduced')
+	print('classdef reduced : ' + p[2])
 	pass
 
 def p_list_iter(p):
@@ -862,6 +863,6 @@ if __name__ == '__main__':
 	yacc.yacc(debug=True)
 	parser = yacc.yacc()
 	#with open('.\\test.py','r') as input_file:
-	with open('E:\\workspace\\django-django-1.7a2-3175-g71c638f\\django-django-71c638f\\django\\http\\request.py', 'r') as input_file:
+	with open('C:\\Users\\IBM_ADMIN\\workspace\\django-django-d9a30ed\\django\\http\\cookie.py', 'r') as input_file:
 		input_text = input_file.read() + '\npass' # ugly, but it works
 		res = parser.parse(input_text)

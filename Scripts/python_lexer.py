@@ -75,9 +75,9 @@ tokens = [
 	'SIGQUOT',
 	'DOUBLEQUOT',
 	'TRIPLEQUOT',
-	'RUSIGQUOT',
-	'RUDOUBLEQUOT',
-	'RUTRIPLEQUOT',
+	'RUBSIGQUOT',
+	'RUBDOUBLEQUOT',
+	'RUBTRIPLEQUOT',
 	'WHITESPACE',
 	'NEWLINE',
 	'COLON',
@@ -114,8 +114,8 @@ states = (
    ('indent', 'exclusive')
 )
 
-def t_RUTRIPLEQUOT(t):
-	r'(r?|u?)[\'\"]{3}'
+def t_RUBTRIPLEQUOT(t):
+	r'([rR]?|[uU]?|[bB]?)(\'{3}|\"{3})'
 	t.type = 'TRIPLEQUOT'
 	if t.value[-1] == '\'':
 		t.value = '\'\'\''
@@ -123,14 +123,14 @@ def t_RUTRIPLEQUOT(t):
 		t.value = '\"\"\"'
 	return start_string(t, True)
 
-def t_RUDOUBLEQUOT(t):
-	r'(r?|u?)\"'
+def t_RUBDOUBLEQUOT(t):
+	r'([rR]?|[uU]?|[bB]?)\"'
 	t.type = 'DOUBLEQUOT'
 	t.value = '\"'
 	return start_string(t)
 
-def t_RUSIGQUOT(t):
-	r'(r?|u?)\''
+def t_RUBSIGQUOT(t):
+	r'([rR]?|[uU]?|[bB]?)\''
 	t.type = 'SIGQUOT'
 	t.value = '\''
 	return start_string(t)
@@ -141,7 +141,7 @@ def t_IDENTIFIER(t):
 	return t
 
 def t_OCT(t):
-	r'0[1-7]+[0-7]*[Ll]?'
+	r'0o[1-7]+[0-7]*[Ll]?'
 	return t
 
 def t_COMPLEX(t):
@@ -168,7 +168,7 @@ def t_basestring_end(t):
 		return t
 
 def t_longstring_end(t):
-	r'(\'|\"){3}'
+	r'\'{3}|\"{3}'
 	if t.value == t.lexer.quot_mark:
 		t.value = t.lexer.lexdata[t.lexer.start_pos:t.lexer.lexpos]
 		t.type = 'LONGSTRING'
@@ -191,7 +191,7 @@ def t_longstring_error(t):
 	process_string(t)
 
 def t_NEWLINE(t):
-	r'[\n]'
+	r'\n'
 	global _g_lcontinue
 	global _g_barrier_scope
 	if _g_lcontinue:
@@ -213,6 +213,10 @@ def t_indent_blankline(t):
 	# because of the '\n'
 	# we're still in the 'indent' mode
 	return t
+
+def t_indent_comment(t):
+	r'''[\t]*\#.*\n'''
+	pass
 
 def t_indent_end(t):
 	r'[ \t]+'
