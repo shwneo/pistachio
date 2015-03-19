@@ -115,7 +115,7 @@ states = (
 )
 
 def t_RUBTRIPLEQUOT(t):
-	r'([rR]?|[uU]?|[bB]?)(\'{3}|\"{3})'
+	r'([bB]?[rR]?|[uU]?[rR]?)(\'{3}|\"{3})'
 	t.type = 'TRIPLEQUOT'
 	if t.value[-1] == '\'':
 		t.value = '\'\'\''
@@ -124,29 +124,33 @@ def t_RUBTRIPLEQUOT(t):
 	return start_string(t, True)
 
 def t_RUBDOUBLEQUOT(t):
-	r'([rR]?|[uU]?|[bB]?)\"'
+	r'([bB]?[rR]?|[uU]?[rR]?)\"'
 	t.type = 'DOUBLEQUOT'
 	t.value = '\"'
 	return start_string(t)
 
 def t_RUBSIGQUOT(t):
-	r'([rR]?|[uU]?|[bB]?)\''
+	r'([bB]?[rR]?|[uU]?[rR]?)\''
 	t.type = 'SIGQUOT'
 	t.value = '\''
 	return start_string(t)
 
-def t_IDENTIFIER(t):
-	r'[_a-zA-Z][\d\w]*'
-	t.type = key_words.get(t.value,'IDENTIFIER')
+def t_OCT(t):
+	r'0o[0-7]+[Ll]?'
 	return t
 
-def t_OCT(t):
-	r'0o[1-7]+[0-7]*[Ll]?'
+def t_HEX(t):
+	r'0x[0-9a-fA-F]+[Ll]?'
 	return t
 
 def t_COMPLEX(t):
 	r'\d+j[$\s]'
 	t.value = t.value.strip()
+	return t
+
+def t_IDENTIFIER(t):
+	r'[_a-zA-Z][\d\w]*'
+	t.type = key_words.get(t.value,'IDENTIFIER')
 	return t
 
 def start_string(t, long_str=False):
@@ -345,18 +349,21 @@ def t_RBRACE(t):
 	right_barrier_scope(t.value)
 	return t
 
+def t_divide(t):
+	r'\/\/'
+	t.type = 'DIVIDE'
+	return t
+
 t_COMMA = r','
 t_DOT = r'\.'
 t_DOTS = r'\.{2,}'
-t_SLASH = r'\/'
-#t_BACKSLASH = r'\\'
 t_INTEGER = r'\d+([eE][+-]?\d+)?[Ll]?'
-t_HEX = r'0x[0-9a-fA-F]+[Ll]?$'
+
 t_FLOAT = r'([0-9]*\.[0-9]+|[0-9]+\.[0-9]*)([eE][+-]?[0-9]+)?'
 t_PLUS = r'\+'
 t_MINUS = r'\-'
 t_TIMES = r'\*'
-t_DIVIDE = r'\/|\/\/'
+t_DIVIDE = r'\/'
 t_ignore_COMMENT = r'\#.*'
 t_ASSIGN = r'='
 t_EQUAL = r'=='

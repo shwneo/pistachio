@@ -420,10 +420,10 @@ def p_for_stmt(p):
 	pass
 
 def p_try_stmt(p):
-	r'''try_stmt : TRY COLON suite except_clauses COLON suite
-				 | TRY COLON suite except_clauses COLON suite ELSE COLON suite
-				 | TRY COLON suite except_clauses COLON suite ELSE COLON suite FINALLY COLON suite
-				 | TRY COLON suite except_clauses COLON suite FINALLY COLON suite
+	r'''try_stmt : TRY COLON suite except_clauses
+				 | TRY COLON suite except_clauses ELSE COLON suite
+				 | TRY COLON suite except_clauses ELSE COLON suite FINALLY COLON suite
+				 | TRY COLON suite except_clauses FINALLY COLON suite
 				 | TRY COLON suite FINALLY COLON suite'''
 	pass
 
@@ -453,10 +453,10 @@ def p_more_except_clauses(p):
 	pass
 
 def p_except_clause(p):
-	r'''except_clause : EXCEPT
-					  | EXCEPT test
-					  | EXCEPT test AS test
-					  | EXCEPT test COMMA test'''
+	r'''except_clause : EXCEPT COLON suite
+					  | EXCEPT test COLON suite
+					  | EXCEPT test AS test COLON suite
+					  | EXCEPT test COMMA test COLON suite'''
 	pass
 
 def p_suite(p):
@@ -695,7 +695,7 @@ def p_arglist(p):
 	r'''arglist : arglists
 				| arglists1
 				| arglists1 TIMES test middle_arguments
-				| arglists1 TIMES test middle_arguments COMMA POWER test
+				| arglists1 TIMES test middle_arguments POWER test
 				| arglists1 TIMES test COMMA POWER test
 				| arglists1 TIMES test
 				| arglists1 POWER test
@@ -707,7 +707,8 @@ def p_arglist(p):
 
 def p_middle_arguments(p):
 	r'''middle_arguments : COMMA argument middle_arguments
-						 | COMMA argument'''
+						 | COMMA argument
+						 | COMMA'''
 	pass
 
 def p_arglists(p):
@@ -801,6 +802,7 @@ def p_varargslist(p):
 					| fpdef_args TIMES IDENTIFIER COMMA POWER IDENTIFIER
 					| fpdef_args POWER IDENTIFIER
 					| TIMES IDENTIFIER COMMA POWER IDENTIFIER
+					| TIMES IDENTIFIER
 					| POWER IDENTIFIER'''
 	pass
 
@@ -869,6 +871,6 @@ if __name__ == '__main__':
 	yacc.yacc(debug=True)
 	parser = yacc.yacc()
 	#with open('.\\test.py','r') as input_file:
-	with open('E:\\workspace\\django-django-1.7a2-3175-g71c638f\\django-django-71c638f\\django\\contrib\\admin\\widgets.py', 'r') as input_file:
+	with open('C:\\Users\\IBM_ADMIN\\workspace\\django-django-d9a30ed\\django\\db\\backends\\oracle\\creation.py', 'r') as input_file:
 		input_text = input_file.read() + '\npass' # ugly, but it works
 		res = parser.parse(input_text)
