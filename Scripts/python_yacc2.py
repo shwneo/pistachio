@@ -700,8 +700,11 @@ def p_arglist(p):
 				| arglists1 TIMES test
 				| arglists1 POWER test
 				| TIMES test COMMA POWER test
+				| TIMES test COMMA POWER test middle_arguments
 				| TIMES test
-				| POWER test'''
+				| TIMES test middle_arguments
+				| POWER test
+				| POWER test middle_arguments'''
 	print('arglist reduced')
 	pass
 
@@ -800,10 +803,15 @@ def p_varargslist(p):
 					| fpdef_args1
 					| fpdef_args TIMES IDENTIFIER
 					| fpdef_args TIMES IDENTIFIER COMMA POWER IDENTIFIER
+					| fpdef_args TIMES IDENTIFIER fpdef_args2
+					| fpdef_args TIMES IDENTIFIER COMMA POWER IDENTIFIER fpdef_args2
 					| fpdef_args POWER IDENTIFIER
 					| TIMES IDENTIFIER COMMA POWER IDENTIFIER
+					| TIMES IDENTIFIER COMMA POWER IDENTIFIER fpdef_args2
 					| TIMES IDENTIFIER
-					| POWER IDENTIFIER'''
+					| TIMES IDENTIFIER fpdef_args2
+					| POWER IDENTIFIER
+					| POWER IDENTIFIER fpdef_args2'''
 	pass
 
 def p_fplist(p):
@@ -834,9 +842,19 @@ def p_fpdef_args1(p):
 	r'''fpdef_args1 : fpdef_arg_list1'''
 	pass
 
+def p_fpdef_args2(p):
+	r'''fpdef_args2 : fpdef_arg_list2'''
+	pass
+
 def p_fpdef_arg_list1(p):
 	r'''fpdef_arg_list1 : fpdef_arg COMMA fpdef_arg_list1
 						| fpdef_arg'''
+	pass
+
+def p_fpdef_arg_list2(p):
+	r'''fpdef_arg_list2 : COMMA fpdef_arg fpdef_arg_list2
+						| COMMA fpdef_arg COMMA
+						| COMMA fpdef_arg'''
 	pass
 
 def p_fpdef_arg(p):
@@ -867,10 +885,13 @@ def p_empty(p):
     'empty :'
     pass
 
-if __name__ == '__main__':
+def do_test_parsing(file_name):
 	yacc.yacc(debug=True)
 	parser = yacc.yacc()
 	#with open('.\\test.py','r') as input_file:
-	with open('C:\\Users\\IBM_ADMIN\\workspace\\django-django-d9a30ed\\django\\db\\backends\\oracle\\creation.py', 'r') as input_file:
+	with open(file_name, 'r') as input_file:
 		input_text = input_file.read() + '\npass' # ugly, but it works
 		res = parser.parse(input_text)
+
+if __name__ == '__main__':
+	do_test_parsing('./test.py')
