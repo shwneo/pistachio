@@ -1,6 +1,16 @@
 import ply.yacc as yacc
 import ply.lex as lex
-from python_lexer import tokens
+from python_lexer import PythonLexer
+
+py_lexer = PythonLexer()
+
+tokens = py_lexer.tokens
+curr_name = ''
+name_table = {
+	'from':'',
+	'from_dots':'',
+	'import_as':{}
+	}
 
 def p_file_input(p):
 	r'''file_input : inputs'''
@@ -105,23 +115,43 @@ def p_more_dotted_as_name(p):
 def p_dotted_as_name(p):
 	r'''dotted_as_name : dotted_name
 					   | dotted_name AS IDENTIFIER'''
+	print('dotted_as_name reduced')
 	pass
 
 def p_import_from(p):
 	r'''import_from : FROM dotted_name import_part
 					| FROM one_or_more_dots dotted_name import_part
 					| FROM one_or_more_dots import_part'''
+	global name_table
+	from_name = name_table['from_dots'] + name_table['from']
+	import_list = name_table['import_as'].keys()
+	print('import_from reduced : from ' + from_name + ' import ')
+	if '__future__' == from_name and 'print_function' in import_list:
+		print('Ahhhhhhhhhhhhhhhhh')
+		py_lexer.setPrintAsFunction()
+	name_table['from'] = ''
+	name_table['from_dots'] = ''
+	name_table['import_as'] = {}
 	pass
 
 def p_one_or_more_dots(p):
 	r'''one_or_more_dots : DOT
-						 | DOTS'''
+						 | DOTS
+						 | TRIDOTS'''
+	global name_table
+	name_table['from_dots'] = p[1]
 	pass
 
 def p_import_part(p):
 	r'''import_part : IMPORT TIMES
 					| IMPORT LPAREN import_as_names RPAREN
 					| IMPORT import_as_names'''
+	global name_table
+	try:
+		if p[2] == '*':
+			name_table['import'] = '*'
+	except:
+		pass
 	pass
 
 def p_import_as_names(p):
@@ -137,6 +167,13 @@ def p_import_as_name_list(p):
 def p_import_as_name(p):
 	r'''import_as_name : IDENTIFIER
 					   | IDENTIFIER AS IDENTIFIER'''
+	global name_table
+	name_table['import_as'][p[1]] = ''
+	try:
+		if p[3]:
+			name_table['import_as'][p[1]] = p[3]
+	except:
+		pass
 	pass
 
 def p_test(p):
@@ -297,7 +334,8 @@ def p_expr_stmt(p):
 
 def p_print_stmt(p):
 	r'''print_stmt : PRINT testlist
-				   | PRINT RSHIFT testlist'''
+				   | PRINT RSHIFT testlist
+				   | PRINT'''
 	pass
 
 def p_del_stmt(p):
@@ -343,11 +381,19 @@ def p_raise_stmt(p):
 
 def p_dotted_name(p):
 	r'''dotted_name : dotted_names'''
+	print('dotted_name reduced')
 	pass
 
 def p_dotted_names(p):
 	r'''dotted_names : IDENTIFIER DOT dotted_names
 			  		 | IDENTIFIER'''
+	global name_table
+	dot = None
+	try:
+		dot = p[2]
+		name_table['from'] = p[1] + dot + name_table['from']
+	except:
+		name_table['from'] = p[1] + name_table['from']
 	pass
 
 def p_global_stmt(p):
@@ -460,7 +506,7 @@ def p_except_clause(p):
 	pass
 
 def p_suite(p):
-	r'''suite : simple_stmt
+	r'''suite : simple_stmt NEWLINE
 			  | NEWLINE INDENT inputs DEDENT'''
 	print('suite reduced')
 	pass
@@ -562,7 +608,7 @@ def p_subscriptlists(p):
 	pass
 
 def p_subscript(p):
-	r'''subscript : DOT DOT DOT
+	r'''subscript : TRIDOTS
 				  | test
 				  | test COLON test sliceop
 				  | test COLON test
@@ -597,7 +643,8 @@ def p_number(p):
 			   | HEX
 			   | OCT
 			   | FLOAT
-			   | COMPLEX'''
+			   | COMPLEX
+			   | BINARY'''
 	pass
 
 def p_strings(p):
@@ -888,10 +935,12 @@ def p_empty(p):
 def do_test_parsing(file_name):
 	yacc.yacc(debug=True)
 	parser = yacc.yacc()
+	py_lexer.reset()
 	#with open('.\\test.py','r') as input_file:
 	with open(file_name, 'r') as input_file:
 		input_text = input_file.read() + '\npass' # ugly, but it works
-		res = parser.parse(input_text)
+		py_lexer.reset()
+		res = parser.parse(input_text, lexer = py_lexer)
 
 if __name__ == '__main__':
-	do_test_parsing('./test.py')
+	do_test_parsing('C:\\Python27\\Lib\\idlelib\\pyshell.py')
