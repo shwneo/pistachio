@@ -9,12 +9,18 @@ curr_name = ''
 name_table = {
 	'from':'',
 	'from_dots':'',
-	'import_as':{}
-	}
+	'import_as':{},
+	'curr_nspace':'',
+	'indent_level':0,
+	'name_space':['*',],
+	'expose_variables':[],
+	'collect_variables':[],
+	'expose_collect':True,
+}
 
 def p_file_input(p):
 	r'''file_input : inputs'''
-	print('file_input reduced')
+	#print('file_input reduced')
 	pass
 
 def p_inputs(p):
@@ -23,27 +29,27 @@ def p_inputs(p):
 
 def p_more_inputs(p):
 	r'''more_inputs : stmt more_inputs
-					| NEWLINE more_inputs
-					| NEWLINE
+					| NEWLINE clear_expose more_inputs
+					| NEWLINE clear_expose
 					| stmt'''
 	pass
 
 def p_stmt(p):
 	r'''stmt : simple_stmt
 			 | compound_stmt'''
-	print('stmt reduced!')
+	#print('stmt reduced!')
 	pass
 
 def p_simple_stmt(p):
 	r'''simple_stmt : small_stmts'''
-	print('simple_stmt reduced')
+	#print('simple_stmt reduced')
 	pass
 
 def p_decorator(p):
 	r'''decorator : AT dotted_name NEWLINE
 				  | AT dotted_name LPAREN RPAREN NEWLINE
 				  | AT dotted_name LPAREN arglist RPAREN NEWLINE'''
-	print('decorator reduced :')
+	#print('decorator reduced :')
 	pass
 
 def p_decorators(p):
@@ -61,8 +67,14 @@ def p_decorated(p):
 	pass
 
 def p_funcdef(p):
-	r'''funcdef : DEF IDENTIFIER paramters COLON suite'''
-	print('funcdef reduced : ' + p[2])
+	r'''funcdef : DEF IDENTIFIER see_function_name paramters COLON suite'''
+	pass
+
+def p_see_function_name(p):
+	r'''see_function_name : '''
+	global name_table
+	print(' *** NEW FUNCTION ' + p[-1] + ' UNDER ' + name_table['name_space'][-1])
+	name_table['curr_nspace'] = p[-1]
 	pass
 
 def p_paramters(p):
@@ -90,13 +102,13 @@ def p_small_stmt(p):
 				   | exec_stmt
 				   | assert_stmt
 				   | import_stmt'''
-	print('small_stmt reduced')
+	#print('small_stmt reduced')
 	pass
 
 def p_import_stmt(p):
 	r'''import_stmt : import_name
 					| import_from'''
-	print('import_stmt reduced')
+	#print('import_stmt reduced')
 	pass
 
 def p_import_name(p):
@@ -115,7 +127,7 @@ def p_more_dotted_as_name(p):
 def p_dotted_as_name(p):
 	r'''dotted_as_name : dotted_name
 					   | dotted_name AS IDENTIFIER'''
-	print('dotted_as_name reduced')
+	#print('dotted_as_name reduced')
 	pass
 
 def p_import_from(p):
@@ -125,7 +137,7 @@ def p_import_from(p):
 	global name_table
 	from_name = name_table['from_dots'] + name_table['from']
 	import_list = name_table['import_as'].keys()
-	print('import_from reduced : from ' + from_name + ' import ')
+	#print('import_from reduced : from ' + from_name + ' import ')
 	if '__future__' == from_name and 'print_function' in import_list:
 		print('Ahhhhhhhhhhhhhhhhh')
 		py_lexer.setPrintAsFunction()
@@ -180,7 +192,7 @@ def p_test(p):
 	r'''test : or_test
 			 | or_test IF or_test ELSE test
 			 | lambdef'''
-	print('1 succeed!')
+	#print('1 succeed!')
 	pass
 
 def p_or_test(p):
@@ -327,9 +339,14 @@ def p_arith_expr(p):
 def p_expr_stmt(p):
 	r'''expr_stmt : testlist AUGASSIGN yield_expr
 				  | testlist AUGASSIGN testlist
-				  | testlist assignments
+				  | testlist assignments expr_end
 				  | testlist'''
-	print('expr_stmt reduced')
+	#print('expr_stmt reduced')
+	pass
+
+def p_expr_end(p):
+	r'''expr_end : '''
+	print(' *** EXPRESSION END ***')
 	pass
 
 def p_print_stmt(p):
@@ -381,7 +398,7 @@ def p_raise_stmt(p):
 
 def p_dotted_name(p):
 	r'''dotted_name : dotted_names'''
-	print('dotted_name reduced')
+	#print('dotted_name reduced')
 	pass
 
 def p_dotted_names(p):
@@ -436,7 +453,7 @@ def p_if_stmt(p):
 				| IF test COLON suite ELSE COLON suite
 				| IF test COLON suite elif_stmts
 				| IF test COLON suite elif_stmts ELSE COLON suite'''
-	print('if_stmt reduced')
+	#print('if_stmt reduced')
 	pass
 
 def p_elif_stmts(p):
@@ -450,19 +467,19 @@ def p_more_elif_stmts(p):
 
 def p_elif_stmt(p):
 	r'''elif_stmt : ELIF test COLON suite'''
-	print('elif_stmt reduced')
+	#print('elif_stmt reduced')
 	pass
 
 def p_while_stmt(p):
 	r'''while_stmt : WHILE test COLON suite
 				   | WHILE test COLON suite ELSE COLON suite'''
-	print('while_stmt reduced')
+	#print('while_stmt reduced')
 	pass
 
 def p_for_stmt(p):
 	r'''for_stmt : FOR exprlist IN testlist COLON suite
 				 | FOR exprlist IN testlist COLON suite ELSE COLON suite'''
-	print('for_stmt reduced')
+	#print('for_stmt reduced')
 	pass
 
 def p_try_stmt(p):
@@ -476,7 +493,7 @@ def p_try_stmt(p):
 def p_with_stmt(p):
 	r'''with_stmt : WITH with_item COLON suite
 				  | WITH with_item COMMA with_items COLON suite'''
-	print('with_stmt reduced')
+	#print('with_stmt reduced')
 	pass
 
 def p_with_items(p):
@@ -507,8 +524,37 @@ def p_except_clause(p):
 
 def p_suite(p):
 	r'''suite : simple_stmt NEWLINE
-			  | NEWLINE INDENT inputs DEDENT'''
-	print('suite reduced')
+			  | NEWLINE clear_expose INDENT scope_begin inputs DEDENT scope_end'''
+	#print('suite reduced')
+	pass
+
+def p_scope_begin(p):
+	r'''scope_begin : '''
+	global name_table
+	if name_table['curr_nspace'] != '':
+		name_table['name_space'].append(name_table['curr_nspace'])
+	else:
+		name_table['indent_level'] += 1
+		print('SCOPE FREE INDENT')
+	name_table['curr_nspace'] = ''
+	pass
+
+def p_clear_expose(p):
+	r'''clear_expose : '''
+	#print(' *** CLEAR VARIABLE EXPOSE LIST')
+	global name_table
+	name_table['expose_collect'] = True
+	name_table['collect_variables'][:] = []
+	pass
+
+def p_scope_end(p):
+	r'''scope_end : '''
+	global name_table
+	if name_table['indent_level'] == 0:
+		name_table['name_space'].pop(-1)
+	else:
+		name_table['indent_level'] -= 1
+		print('SCOPE FREE DEDENT')
 	pass
 
 def p_stmts(p):
@@ -518,7 +564,7 @@ def p_stmts(p):
 def p_more_stmts(p):
 	r'''more_stmts : stmt more_stmts
 				   | stmt
-				   | NEWLINE'''
+				   | NEWLINE clear_expose'''
 	pass
 
 def p_expr_assignments(p):
@@ -531,8 +577,16 @@ def p_assignments_list(p):
 	pass
 
 def p_assignment(p):
-	r'''assignment : ASSIGN yield_expr
-				   | ASSIGN testlist'''
+	r'''assignment : ASSIGN expression_right_start yield_expr
+				   | ASSIGN expression_right_start testlist'''
+	pass
+
+def p_expression_right_start(p):
+	r'''expression_right_start : '''
+	print(' *** EXPRESSION RIGHT PART ***')
+	global name_table
+	name_table['expose_variables'] = name_table['expose_variables'] + name_table['collect_variables']
+	name_table['collect_variables'][:] = []
 	pass
 
 def p_terms(p):
@@ -584,17 +638,23 @@ def p_trailers(p):
 	r'''trailers : more_trailers'''
 	pass
 
-def p_more_tailers(p):
+def p_more_trailer(p):
 	r'''more_trailers : trailer more_trailers
 					  | trailer'''
 	pass
 
-def p_tailer(p):
-	r'''trailer : LPAREN RPAREN
-				| LPAREN arglist RPAREN
-				| LSQABRACK subscriptlist RSQABRACK
-				| DOT IDENTIFIER'''
-	print('trailer reduced')
+def p_trailer(p):
+	r'''trailer : LPAREN expose_stop RPAREN
+				| LPAREN expose_stop arglist RPAREN
+				| LSQABRACK expose_stop subscriptlist RSQABRACK
+				| DOT expose_stop IDENTIFIER'''
+	#print('trailer reduced')
+	pass
+
+def p_expose_stop(p):
+	r'''expose_stop : '''
+	global name_table
+	name_table['expose_collect'] = False
 	pass
 
 def p_subscriptlist(p):
@@ -633,9 +693,16 @@ def p_atom(p):
 			 | LBRACE dictorsetmaker RBRACE
 			 | LBRACE RBRACE
 			 | SKIM testlist1 SKIM
-			 | IDENTIFIER
+			 | IDENTIFIER collect_expose
 			 | number
 			 | strings'''
+	pass
+
+def p_collect_expose(p):
+	r'''collect_expose : '''
+	global name_table
+	name_table['collect_variables'].append(p[-1])
+	print(" *** EXPOSE VARIABLE " + p[-1])
 	pass
 
 def p_number(p):
@@ -684,7 +751,7 @@ def p_more_tests(p):
 
 def p_testlist(p):
 	r'''testlist : testlists'''
-	print('testlist reduced')
+	#print('testlist reduced')
 	pass
 
 def p_testlists(p):
@@ -724,7 +791,7 @@ def p_dictorsetmaker(p):
 					   | test COLON test COMMA test_colon_list
 					   | test comp_for
 					   | testlist'''
-	print('dictorsetmaker reduced')
+	#print('dictorsetmaker reduced')
 	pass
 
 def p_test_colon_list(p):
@@ -752,7 +819,7 @@ def p_arglist(p):
 				| TIMES test middle_arguments
 				| POWER test
 				| POWER test middle_arguments'''
-	print('arglist reduced')
+	#print('arglist reduced')
 	pass
 
 def p_middle_arguments(p):
@@ -778,10 +845,17 @@ def p_argument(p):
 	pass
 
 def p_classdef(p):
-	r'''classdef : CLASS IDENTIFIER COLON suite
-				 | CLASS IDENTIFIER LPAREN RPAREN COLON suite
-				 | CLASS IDENTIFIER LPAREN testlist RPAREN COLON suite'''
-	print('classdef reduced : ' + p[2])
+	r'''classdef : CLASS IDENTIFIER see_class_name COLON suite
+				 | CLASS IDENTIFIER see_class_name LPAREN RPAREN COLON suite
+				 | CLASS IDENTIFIER see_class_name LPAREN testlist RPAREN COLON suite'''
+	#print('classdef reduced : ' + p[2])
+	pass
+
+def p_see_class_name(p):
+	r'''see_class_name : '''
+	global name_table
+	print(' *** NEW CLASS ' + p[-1] + ' UNDER ' + name_table['name_space'][-1])
+	name_table['curr_nspace'] = p[-1]
 	pass
 
 def p_list_iter(p):
@@ -836,13 +910,13 @@ def p_old_test(p):
 def p_old_lambdef(p):
 	r'''old_lambdef : LAMBDA COLON old_test
 					| LAMBDA varargslist COLON old_test'''
-	print('Old Lambda reduced')
+	#print('Old Lambda reduced')
 	pass
 
 def p_labdef(p):
 	r'''lambdef : LAMBDA COLON test
 				| LAMBDA varargslist COLON test'''
-	print('Lambda reduced')
+	#print('Lambda reduced')
 	pass
 
 def p_varargslist(p):
@@ -912,7 +986,7 @@ def p_fpdef_arg(p):
 def p_yield_expr(p):
 	r'''yield_expr : YIELD
 				   | YIELD testlist'''
-	print('yield_expr reduced')
+	#print('yield_expr reduced')
 	pass
 
 def p_error(p):
@@ -943,4 +1017,5 @@ def do_test_parsing(file_name):
 		res = parser.parse(input_text, lexer = py_lexer)
 
 if __name__ == '__main__':
-	do_test_parsing('C:\\Python27\\Lib\\idlelib\\pyshell.py')
+	do_test_parsing('.\\test.py')
+	print('VARIABLES = ' + ','.join(name_table['expose_variables']))
