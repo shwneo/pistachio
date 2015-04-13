@@ -68,14 +68,18 @@ class CLexer:
 		"RSQABRACK",
 		"WHITESPACE",
 		"IDENTIFIER",
+		"STRING_LITERAL",
+		"CONSTANT",
+		"COMMENT",
+		'TYPE_NAME',
 	] + list(key_words.values())
 
 	literals = [
-		",",":","=","(",
-		")",".","&","!",
-		"~","-","*","/",
-		"%","<",">","^",
-		"|","?",
+		";",",",":","=",
+		"(",")",".","&",
+		"!","~","-","+",
+		"*","/","%","<",
+		">","^","|","?",
 	]
 
 	def __init__(self):
@@ -94,11 +98,13 @@ class CLexer:
 
 	def t_ELLIPSIS(self, t):
 		r"\.\.\."
-		return ELLIPSIS
+		t.type = "ELLIPSIS"
+		return t
 
 	def t_RIGHT_ASSIGN(self, t):
 		r">>="
-		return RIGHT_ASSIGN
+		t.type = "RIGHT_ASSIGN"
+		return t
 	
 	def t_LEFT_ASSIGN(self, t):
 		r"<<=" 
@@ -218,10 +224,48 @@ class CLexer:
 		r"[\s\t\n\v\f]"
 		return t
 
+	def t_hex(self, t):
+		r"0[Xx][0-9a-fA-F]+([uU]?[lL]?[lL]?)"
+		t.type = "CONSTANT"
+		return t
+
+	def t_oct(self, t):
+		r"0\d+([uU]?[lL]?[lL]?)?"
+		t.type = "CONSTANT"
+		return t
+
+	def t_float(self, t):
+		r"\d+\.\d*([Ee][\+-]?\d+)?[FfLl]?|\d*\.\d+([Ee][\+-]?\d+)?[FfLl]?"
+		t.type = "CONSTANT"
+		return t
+
+	def t_integer(self, t):
+		r"\d+([Ee][\+-]?\d+)?[FfLl]?"
+		t.type = "CONSTANT"
+		return t
+
+	def t_character(self, t):
+		r"[a-zA-Z_]?'(\.|[^\\\']|\\\'|\\.)+'"
+		t.type = "CONSTANT"
+		return t
+
+	def t_STRING(self, t):
+		r"[a-zA-Z_]?\"(\.|[^\\\"]|\\\"|\\.)*\""
+		t.type = "STRING_LITERAL"
+		return t
+
+	def t_ignore_COMMENT(self, t):
+		r"\#.*"
+		pass
+
+	def t_error(self, t):
+		print('C Language Lexer Error!')
+		pass
+
 lexer = CLexer()
 
 def main():
-	with open('.\\test.c') as input_file:
+	with open('.\\test.i') as input_file:
 		input_text = input_file.read()
 		lexer.input(input_text)
 		while True:
