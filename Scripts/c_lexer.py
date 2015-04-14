@@ -33,6 +33,7 @@ key_words = {
 	"void":"VOID",
 	"volatile":"VOLATILE",
 	"while":"WHILE",
+	"__attribute__":"ATTRIBUTE"
 }
 
 
@@ -265,7 +266,7 @@ class CLexer:
 lexer = CLexer()
 
 def main():
-	with open('.\\test.i') as input_file:
+	with open('.\\test.c') as input_file:
 		input_text = input_file.read()
 		lexer.input(input_text)
 		while True:

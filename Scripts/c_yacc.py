@@ -13,10 +13,12 @@ def p_primary_expression(p):
 						  | CONSTANT
 						  | STRING_LITERAL
 						  | '(' expression ')' '''
+	print('primary_expression reduced')
 	pass
 
 def p_postfix_expression(p):
 	'''postfix_expression : primary_expression postfix_expressions'''
+	print('postfix_expression reduced')
 	pass
 
 def p_postfix_expressions(p):
@@ -199,7 +201,10 @@ def p_constant_expression(p):
 
 def p_declaration(p):
 	'''declaration : declaration_specifiers ';'
-				   | declaration_specifiers init_declarator_list ';' '''
+				   | declaration_specifiers init_declarator_list ';'
+				   | TYPEDEF declaration_specifiers init_declarator_list ';'
+				   | TYPEDEF declaration_specifiers init_declarator_list '(' parameter_type_list ')' ';' '''
+	print('declaration reduced')
 	pass
 
 def p_declaration_specifiers(p):
@@ -226,11 +231,16 @@ def p_init_declarator(p):
 	pass
 
 def p_storage_class_specifier(p):
-	'''storage_class_specifier : TYPEDEF
-							   | EXTERN
+	'''storage_class_specifier : EXTERN
 							   | STATIC
 							   | AUTO
-							   | REGISTER'''
+							   | REGISTER
+							   | extension_specifiers'''
+	pass
+
+def p_extension_specifiers(p):
+	'''extension_specifiers : ATTRIBUTE '(' initializer ')' '''
+	print('extension_specifiers reduced')
 	pass
 
 def p_type_specifier(p):
@@ -246,12 +256,14 @@ def p_type_specifier(p):
 					  | struct_or_union_specifier
 					  | enum_specifier
 					  | TYPE_NAME'''
+	print('type_specifier reduced')
 	pass
 
 def p_struct_or_union_specifier(p):
 	'''struct_or_union_specifier : struct_or_union IDENTIFIER LBRACE struct_declaration_list RBRACE
 								 | struct_or_union LBRACE struct_declaration_list RBRACE
 								 | struct_or_union IDENTIFIER'''
+	print('struct_or_union_specifier reduced')
 	pass
 
 def p_struct_or_union(p):
@@ -269,7 +281,7 @@ def p_struct_declaration_lists(p):
 	pass
 
 def p_struct_declaration(p):
-	'''struct_declaration : specifier_qualifier_list struct_declarator_list'''
+	'''struct_declaration : specifier_qualifier_list struct_declarator_list ';' '''
 	pass
 
 def p_specifier_qualifier_list(p):
@@ -298,6 +310,7 @@ def p_enum_specifier(p):
 	'''enum_specifier : ENUM LBRACE enumerator_list RBRACE
 					  | ENUM IDENTIFIER LBRACE enumerator_list RBRACE
 					  | ENUM IDENTIFIER'''
+	print('enum_specifier reduced')
 	pass
 
 def p_enumerator_list(p):
@@ -312,6 +325,7 @@ def p_enumerator_lists(p):
 def p_enumerator(p):
 	'''enumerator : IDENTIFIER
 				  | IDENTIFIER '=' constant_expression'''
+	print('enumerator reduced')
 	pass
 
 def p_type_qualifier(p):
@@ -324,8 +338,14 @@ def p_declarator(p):
 	pass
 
 def p_direct_declarator(p):
-	'''direct_declarator : IDENTIFIER direct_declarators
+	'''direct_declarator : IDENTIFIER see_declared_name direct_declarators
 						 | '(' declarator ')' direct_declarators'''
+	print('direct_declarator reduced')
+	pass
+
+def p_see_declared_name(p):
+	'''see_declared_name : '''
+	print('NAME OF %s DECLARED' % p[-1])
 	pass
 
 def p_direct_declarators(p):
@@ -335,6 +355,7 @@ def p_direct_declarators(p):
 						  | '(' identifier_list ')' direct_declarators
 						  | '(' ')' direct_declarators
 						  | empty'''
+	print('direct_declarators reduced')
 	pass
 
 def p_pointer(p):
@@ -375,6 +396,7 @@ def p_parameter_declaration(p):
 
 def p_identifier_list(p):
 	'''identifier_list : IDENTIFIER identifier_lists'''
+	print('identifier_list reduced')
 	pass
 
 def p_identifier_lists(p):
@@ -409,6 +431,7 @@ def p_direct_abstract_declarators(p):
 def p_initializer(p):
 	'''initializer : assignment_expression
 				   | LBRACE initializer_list RBRACE '''
+	print('initializer reduced')
 	pass
 
 def p_initializer_list(p):
@@ -434,6 +457,7 @@ def p_labeled_statement(p):
 	'''labeled_statement : IDENTIFIER ':' statement
 						 | CASE constant_expression ':' statement
 						 | DEFAULT ':' statement'''
+	print('labeled_statement reduced')
 	pass
 
 def p_compound_statement(p):
@@ -464,6 +488,7 @@ def p_statement_lists(p):
 def p_expression_statement(p):
 	'''expression_statement : ';'
 							| expression ';' '''
+	print('expression_statement reduced')
 	pass
 
 def p_selection_statement(p):
@@ -500,6 +525,7 @@ def p_translation_units(p):
 def p_external_declaration(p):
 	'''external_declaration : function_definition
 							| declaration'''
+	print('external_declaration reduced')
 	pass
 
 def p_function_definition(p):
@@ -516,6 +542,12 @@ def p_error(p):
 		tok.type = 'NEWLINE'
 		tok.value = None
 		return tok
+	if p.type == 'IDENTIFIER':
+		# unexpected identifier, may be it's a type name
+		p.type = 'TYPE_NAME'
+		print('IDENTIFIER %s as TYPE_NAME' % (p.value))
+		yacc.errok()
+		return p
 	if p.type == 'WHITESPACE':
 		yacc.errok()
 	else:
@@ -535,4 +567,4 @@ def do_test_parsing(file_name):
 		res = parser.parse(input_text, lexer = c_lexer)
 
 if __name__ == '__main__':
-	do_test_parsing('.\\_sre.i')
+	do_test_parsing('.\\test.c')
