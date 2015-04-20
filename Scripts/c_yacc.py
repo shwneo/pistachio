@@ -7,6 +7,8 @@ c_lexer = CLexer()
 tokens = c_lexer.tokens
 
 start = 'translation_unit'
+latest_decleared_name = ''
+parameter_reducer_lock = False
 
 def p_primary_expression(p):
 	'''primary_expression : IDENTIFIER
@@ -202,10 +204,18 @@ def p_constant_expression(p):
 def p_declaration(p):
 	'''declaration : declaration_specifiers ';'
 				   | declaration_specifiers init_declarator_list ';'
-				   | TYPEDEF declaration_specifiers init_declarator_list ';'
-				   | TYPEDEF declaration_specifiers init_declarator_list '(' parameter_type_list ')' ';' '''
+				   | TYPEDEF declaration_specifiers declarator type_decleared ';' '''
 	print('declaration reduced')
 	pass
+
+def p_type_decleared(p):
+	'''type_decleared : '''
+	global latest_decleared_name
+	p.lexer.add_type_name(latest_decleared_name)
+	print(' *** New type name ' + latest_decleared_name + " added")
+	pass
+
+
 
 def p_declaration_specifiers(p):
 	'''declaration_specifiers : storage_class_specifier
@@ -214,6 +224,7 @@ def p_declaration_specifiers(p):
 							  | type_specifier declaration_specifiers
 							  | type_qualifier
 							  | type_qualifier declaration_specifiers'''
+	print('declaration_specifiers reduced')
 	pass
 
 def p_init_declarator_list(p):
@@ -234,12 +245,13 @@ def p_storage_class_specifier(p):
 	'''storage_class_specifier : EXTERN
 							   | STATIC
 							   | AUTO
-							   | REGISTER
-							   | extension_specifiers'''
+							   | REGISTER'''
 	pass
 
 def p_extension_specifiers(p):
-	'''extension_specifiers : ATTRIBUTE '(' initializer ')' '''
+	'''extension_specifiers : ATTRIBUTE '(' initializer ')'
+							| INLINE
+							| RESTRICT '''
 	print('extension_specifiers reduced')
 	pass
 
@@ -260,10 +272,14 @@ def p_type_specifier(p):
 	pass
 
 def p_struct_or_union_specifier(p):
-	'''struct_or_union_specifier : struct_or_union IDENTIFIER LBRACE struct_declaration_list RBRACE
+	'''struct_or_union_specifier : struct_or_union IDENTIFIER see_hunk_name LBRACE struct_declaration_list RBRACE
 								 | struct_or_union LBRACE struct_declaration_list RBRACE
-								 | struct_or_union IDENTIFIER'''
+								 | struct_or_union IDENTIFIER see_hunk_name'''
 	print('struct_or_union_specifier reduced')
+	pass
+
+def p_see_hunk_name(p):
+	'''see_hunk_name : '''
 	pass
 
 def p_struct_or_union(p):
@@ -289,6 +305,7 @@ def p_specifier_qualifier_list(p):
 								| type_specifier
 								| type_qualifier specifier_qualifier_list
 								| type_qualifier'''
+	print('specifier_qualifier_list reduced')
 	pass
 
 def p_struct_declarator_list(p):
@@ -308,9 +325,13 @@ def p_struct_declarator(p):
 
 def p_enum_specifier(p):
 	'''enum_specifier : ENUM LBRACE enumerator_list RBRACE
-					  | ENUM IDENTIFIER LBRACE enumerator_list RBRACE
-					  | ENUM IDENTIFIER'''
+					  | ENUM IDENTIFIER see_enum_name LBRACE enumerator_list RBRACE
+					  | ENUM IDENTIFIER see_enum_name'''
 	print('enum_specifier reduced')
+	pass
+
+def p_see_enum_name(p):
+	'''see_enum_name : '''
 	pass
 
 def p_enumerator_list(p):
@@ -330,33 +351,53 @@ def p_enumerator(p):
 
 def p_type_qualifier(p):
 	'''type_qualifier : CONST
-					  | VOLATILE'''
+					  | VOLATILE
+					  | extension_specifiers'''
+	print('type_qualifier reduced')
+	pass
 
 def p_declarator(p):
-	'''declarator : pointer direct_declarator
+	'''declarator : pointer direct_declarator extension_specifiers
+				  | direct_declarator extension_specifiers
+				  | pointer direct_declarator
 				  | direct_declarator'''
+	print('declarator reduced')
 	pass
 
 def p_direct_declarator(p):
 	'''direct_declarator : IDENTIFIER see_declared_name direct_declarators
-						 | '(' declarator ')' direct_declarators'''
+						 | '(' declarator ')' direct_declarators end_param_reducer'''
 	print('direct_declarator reduced')
 	pass
 
 def p_see_declared_name(p):
 	'''see_declared_name : '''
-	print('NAME OF %s DECLARED' % p[-1])
+	global latest_decleared_name
+	global parameter_reducer_lock
+	if not parameter_reducer_lock:
+		print('NAME OF %s DECLARED' % p[-1])
+		latest_decleared_name = p[-1]
 	pass
 
 def p_direct_declarators(p):
-	'''direct_declarators : LSQABRACK constant_expression RSQABRACK direct_declarators
+	'''direct_declarators : LSQABRACK begin_param_reducer constant_expression end_param_reducer RSQABRACK direct_declarators
 						  | LSQABRACK RSQABRACK direct_declarators
-						  | '(' parameter_type_list ')' direct_declarators
-						  | '(' identifier_list ')' direct_declarators
+						  | '(' begin_param_reducer parameter_type_list end_param_reducer ')' direct_declarators
+						  | '(' begin_param_reducer identifier_list end_param_reducer ')' direct_declarators
 						  | '(' ')' direct_declarators
 						  | empty'''
 	print('direct_declarators reduced')
 	pass
+
+def p_begin_param_reducer(p):
+	'''begin_param_reducer : '''
+	global parameter_reducer_lock
+	parameter_reducer_lock = True
+
+def p_end_param_reducer(p):
+	'''end_param_reducer : '''
+	global parameter_reducer_lock
+	parameter_reducer_lock = False
 
 def p_pointer(p):
 	'''pointer : '*'
@@ -375,23 +416,26 @@ def p_type_qualifier_lists(p):
 	pass
 
 def p_parameter_type_list(p):
-	'''parameter_type_list : parameter_list
-						   | parameter_list ',' ELLIPSIS '''
+	'''parameter_type_list : parameter_list'''
 	pass
 
 def p_parameter_list(p):
-	'''parameter_list : parameter_declaration parameter_lists'''
+	'''parameter_list : parameter_declaration parameter_lists
+					  | parameter_declaration'''
 	pass
 
 def p_parameter_lists(p):
 	'''parameter_lists : ',' parameter_declaration parameter_lists
+					   | ',' ELLIPSIS
 					   | empty'''
+	print('parameter_lists reduced')
 	pass
 
 def p_parameter_declaration(p):
 	'''parameter_declaration : declaration_specifiers declarator
 							 | declaration_specifiers abstract_declarator
 							 | declaration_specifiers'''
+	print('parameter_declaration reduced')
 	pass
 
 def p_identifier_list(p):
@@ -533,6 +577,7 @@ def p_function_definition(p):
 						   | declaration_specifiers declarator compound_statement
 						   | declarator declaration_list compound_statement
 						   | declarator compound_statement'''
+	print('function_definition reduced')
 	pass
 
 def p_error(p):

@@ -33,7 +33,12 @@ key_words = {
 	"void":"VOID",
 	"volatile":"VOLATILE",
 	"while":"WHILE",
-	"__attribute__":"ATTRIBUTE"
+	"__attribute__":"ATTRIBUTE",
+	"__inline__":"INLINE",
+	"inline":"INLINE",
+	"restrict":"RESTRICT",
+	"__restrict":"RESTRICT",
+	"__restrict__":"RESTRICT",
 }
 
 
@@ -85,6 +90,15 @@ class CLexer:
 
 	def __init__(self):
 		self.lexer = lex.lex(module=self)
+		self.__type_names = []
+		self.__builtin_types = ['__builtin_va_list',]
+
+	def add_type_name(self, name):
+		if name in self.__type_names:
+			return False
+		self.__type_names.append(name)
+		return True
+
 
 	def input(self, in_str):
 		return self.lexer.input(in_str)
@@ -94,7 +108,12 @@ class CLexer:
 
 	def t_IDENTIFIER(self, t):
 		r'[_a-zA-Z][\d\w]*'
-		t.type = key_words.get(t.value,'IDENTIFIER')
+		if t.value in self.__type_names:
+			t.type = 'TYPE_NAME'
+		elif t.value in self.__builtin_types:
+			t.type = 'TYPE_NAME'
+		else:
+			t.type = key_words.get(t.value,'IDENTIFIER')
 		return t
 
 	def t_ELLIPSIS(self, t):
@@ -241,7 +260,7 @@ class CLexer:
 		return t
 
 	def t_integer(self, t):
-		r"\d+([Ee][\+-]?\d+)?[FfLl]?"
+		r"\d+([Ee][\+-]?\d+)?[FfLl]?[Ll]?"
 		t.type = "CONSTANT"
 		return t
 
