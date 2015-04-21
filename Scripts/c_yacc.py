@@ -19,7 +19,8 @@ def p_primary_expression(p):
 	pass
 
 def p_postfix_expression(p):
-	'''postfix_expression : primary_expression postfix_expressions'''
+	'''postfix_expression : postfix_expressions
+						  | primary_expression postfix_expressions'''
 	print('postfix_expression reduced')
 	pass
 
@@ -204,7 +205,9 @@ def p_constant_expression(p):
 def p_declaration(p):
 	'''declaration : declaration_specifiers ';'
 				   | declaration_specifiers init_declarator_list ';'
-				   | TYPEDEF declaration_specifiers declarator type_decleared ';' '''
+				   | TYPEDEF declaration_specifiers declarator type_decleared ';'
+				   | TYPEDEF declaration_specifiers declaration_specifiers ';'
+				   | TYPEDEF declaration_specifiers ';' '''
 	print('declaration reduced')
 	pass
 
@@ -214,8 +217,6 @@ def p_type_decleared(p):
 	p.lexer.add_type_name(latest_decleared_name)
 	print(' *** New type name ' + latest_decleared_name + " added")
 	pass
-
-
 
 def p_declaration_specifiers(p):
 	'''declaration_specifiers : storage_class_specifier
@@ -272,15 +273,13 @@ def p_type_specifier(p):
 	pass
 
 def p_struct_or_union_specifier(p):
-	'''struct_or_union_specifier : struct_or_union IDENTIFIER see_hunk_name LBRACE struct_declaration_list RBRACE
+	'''struct_or_union_specifier : struct_or_union IDENTIFIER  LBRACE struct_declaration_list RBRACE
 								 | struct_or_union LBRACE struct_declaration_list RBRACE
-								 | struct_or_union IDENTIFIER see_hunk_name'''
+								 | struct_or_union IDENTIFIER
+								 | struct_or_union TYPE_NAME '''
 	print('struct_or_union_specifier reduced')
 	pass
 
-def p_see_hunk_name(p):
-	'''see_hunk_name : '''
-	pass
 
 def p_struct_or_union(p):
 	'''struct_or_union : STRUCT
@@ -313,7 +312,7 @@ def p_struct_declarator_list(p):
 	pass
 
 def p_struct_declarator_lists(p):
-	'''struct_declarator_lists : ',' struct_declarator
+	'''struct_declarator_lists : ',' struct_declarator struct_declarator_lists
 							   | empty'''
 	pass
 
@@ -366,6 +365,7 @@ def p_declarator(p):
 
 def p_direct_declarator(p):
 	'''direct_declarator : IDENTIFIER see_declared_name direct_declarators
+						 | TYPE_NAME direct_declarators
 						 | '(' declarator ')' direct_declarators end_param_reducer'''
 	print('direct_declarator reduced')
 	pass
@@ -610,6 +610,5 @@ def do_test_parsing(file_name):
 	with open(file_name, 'r') as input_file:
 		input_text = input_file.read()
 		res = parser.parse(input_text, lexer = c_lexer)
-
 if __name__ == '__main__':
 	do_test_parsing('.\\test.c')

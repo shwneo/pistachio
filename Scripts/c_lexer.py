@@ -99,7 +99,6 @@ class CLexer:
 		self.__type_names.append(name)
 		return True
 
-
 	def input(self, in_str):
 		return self.lexer.input(in_str)
 
@@ -260,7 +259,7 @@ class CLexer:
 		return t
 
 	def t_integer(self, t):
-		r"\d+([Ee][\+-]?\d+)?[FfLl]?[Ll]?"
+		r"\d+([Ee][\+-]?\d+)?[FfLl]?[Ll]?[Uu]?"
 		t.type = "CONSTANT"
 		return t
 
