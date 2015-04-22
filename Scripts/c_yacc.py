@@ -9,13 +9,23 @@ tokens = c_lexer.tokens
 start = 'translation_unit'
 latest_decleared_name = ''
 parameter_reducer_lock = False
+latest_type_name = ''
 
 def p_primary_expression(p):
 	'''primary_expression : IDENTIFIER
 						  | CONSTANT
-						  | STRING_LITERAL
+						  | string
 						  | '(' expression ')' '''
 	print('primary_expression reduced')
+	pass
+
+def p_string(p):
+	'''string : nature_strings'''
+	pass
+
+def p_nature_strings(p):
+	'''nature_strings : STRING_LITERAL nature_strings
+					  | empty'''
 	pass
 
 def p_postfix_expression(p):
@@ -239,7 +249,14 @@ def p_init_declarator_lists(p):
 
 def p_init_declarator(p):
 	'''init_declarator : declarator
-					   | declarator '=' initializer'''
+					   | declarator '=' see_pass initializer'''
+	print('init_declarator reduced')
+	pass
+
+def p_see_pass(p):
+	'''see_pass : '''
+	global latest_type_name
+	print(' --- An assigned instance of %s declared!' % latest_type_name)
 	pass
 
 def p_storage_class_specifier(p):
@@ -257,27 +274,33 @@ def p_extension_specifiers(p):
 	pass
 
 def p_type_specifier(p):
-	'''type_specifier : VOID
-					  | CHAR
-					  | SHORT
-					  | INT
-					  | LONG
-					  | FLOAT
-					  | DOUBLE
-					  | SIGNED
-					  | UNSIGNED
+	'''type_specifier : VOID see_type_name
+					  | CHAR see_type_name
+					  | SHORT see_type_name
+					  | INT see_type_name
+					  | LONG see_type_name
+					  | FLOAT see_type_name
+					  | DOUBLE see_type_name
+					  | SIGNED see_type_name
+					  | UNSIGNED see_type_name
 					  | struct_or_union_specifier
 					  | enum_specifier
-					  | TYPE_NAME'''
+					  | TYPE_NAME see_type_name '''
 	print('type_specifier reduced')
 	pass
 
 def p_struct_or_union_specifier(p):
-	'''struct_or_union_specifier : struct_or_union IDENTIFIER  LBRACE struct_declaration_list RBRACE
+	'''struct_or_union_specifier : struct_or_union IDENTIFIER see_type_name  LBRACE struct_declaration_list RBRACE
 								 | struct_or_union LBRACE struct_declaration_list RBRACE
-								 | struct_or_union IDENTIFIER
-								 | struct_or_union TYPE_NAME '''
+								 | struct_or_union IDENTIFIER see_type_name
+								 | struct_or_union TYPE_NAME see_type_name '''
 	print('struct_or_union_specifier reduced')
+	pass
+
+def p_see_type_name(p):
+	'''see_type_name : '''
+	global latest_type_name
+	latest_type_name = p[-1]
 	pass
 
 
@@ -324,13 +347,9 @@ def p_struct_declarator(p):
 
 def p_enum_specifier(p):
 	'''enum_specifier : ENUM LBRACE enumerator_list RBRACE
-					  | ENUM IDENTIFIER see_enum_name LBRACE enumerator_list RBRACE
-					  | ENUM IDENTIFIER see_enum_name'''
+					  | ENUM IDENTIFIER see_type_name LBRACE enumerator_list RBRACE
+					  | ENUM IDENTIFIER see_type_name'''
 	print('enum_specifier reduced')
-	pass
-
-def p_see_enum_name(p):
-	'''see_enum_name : '''
 	pass
 
 def p_enumerator_list(p):
@@ -365,7 +384,7 @@ def p_declarator(p):
 
 def p_direct_declarator(p):
 	'''direct_declarator : IDENTIFIER see_declared_name direct_declarators
-						 | TYPE_NAME direct_declarators
+						 | TYPE_NAME see_declared_name direct_declarators
 						 | '(' declarator ')' direct_declarators end_param_reducer'''
 	print('direct_declarator reduced')
 	pass
@@ -591,6 +610,11 @@ def p_error(p):
 		# unexpected identifier, may be it's a type name
 		p.type = 'TYPE_NAME'
 		print('IDENTIFIER %s as TYPE_NAME' % (p.value))
+		yacc.errok()
+		return p
+	if p.type == 'TYPE_NAME':
+		p.type = 'IDENTIFIER'
+		print('TYPE_NAME %s as IDENTIFIER' % (p.value))
 		yacc.errok()
 		return p
 	if p.type == 'WHITESPACE':
