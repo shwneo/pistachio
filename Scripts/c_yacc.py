@@ -7,16 +7,39 @@ c_lexer = CLexer()
 tokens = c_lexer.tokens
 
 start = 'translation_unit'
+curr_string = ''
 latest_decleared_name = ''
 parameter_reducer_lock = False
 latest_type_name = ''
+initializer_level = 0
+initializer_field = [0]
+initializer_value = None
+initializer_found = False
+function_arg_list = []
+
+initialized_objects_output = {}
+curr_object = ''
 
 def p_primary_expression(p):
-	'''primary_expression : IDENTIFIER
-						  | CONSTANT
-						  | string
+	'''primary_expression : IDENTIFIER see_value
+						  | CONSTANT see_value
+						  | string see_string
 						  | '(' expression ')' '''
 	print('primary_expression reduced')
+	pass
+
+def p_see_value(p):
+	'''see_value : '''
+	global initializer_value
+	initializer_value = p[-1]
+	pass
+
+def p_see_string(p):
+	'''see_string : '''
+	global initializer_value
+	global curr_string
+	initializer_value = curr_string
+	curr_string = ''
 	pass
 
 def p_string(p):
@@ -24,8 +47,14 @@ def p_string(p):
 	pass
 
 def p_nature_strings(p):
-	'''nature_strings : STRING_LITERAL nature_strings
+	'''nature_strings : STRING_LITERAL see_one_string nature_strings
 					  | empty'''
+	pass
+
+def p_see_one_string(p):
+	'''see_one_string : '''
+	global curr_string
+	curr_string = curr_string + p[-1].strip('"')
 	pass
 
 def p_postfix_expression(p):
@@ -36,8 +65,8 @@ def p_postfix_expression(p):
 
 def p_postfix_expressions(p):
 	'''postfix_expressions : LSQABRACK expression RSQABRACK postfix_expressions
-						   | '(' ')' postfix_expressions
-						   | '(' argument_expression_list ')' postfix_expressions
+						   | '(' see_function_call ')' postfix_expressions
+						   | '(' see_function_call collect_arg_begin argument_expression_list collect_arg_end ')' postfix_expressions
 						   | '.' IDENTIFIER postfix_expressions
 						   | PTR_OP IDENTIFIER postfix_expressions
 						   | INC_OP postfix_expressions
@@ -45,13 +74,37 @@ def p_postfix_expressions(p):
 						   | empty'''
 	pass
 
+def p_collect_arg_begin(p):
+	'''collect_arg_begin : '''
+	pass
+
+def p_collect_arg_end(p):
+	'''collect_arg_end : '''
+	global function_arg_list
+	print(" with arg list = ", function_arg_list)
+	function_arg_list[:] = []
+	pass
+
+def p_see_function_call(p):
+	'''see_function_call : '''
+	global initializer_value
+	print(" --- Function %s called" % (initializer_value))
+	pass
+
 def p_argument_expression_list(p):
-	'''argument_expression_list : assignment_expression argument_expression_lists'''
+	'''argument_expression_list : assignment_expression push_arg argument_expression_lists'''
 	pass
 
 def p_argument_expression_lists(p):
-	'''argument_expression_lists : ','  assignment_expression argument_expression_lists
+	'''argument_expression_lists : ','  assignment_expression push_arg argument_expression_lists
 								 | empty'''
+	pass
+
+def p_push_arg(p):
+	'''push_arg : '''
+	global function_arg_list
+	global initializer_value
+	function_arg_list.append(initializer_value)
 	pass
 
 def p_unary_expression(p):
@@ -256,7 +309,13 @@ def p_init_declarator(p):
 def p_see_pass(p):
 	'''see_pass : '''
 	global latest_type_name
-	print(' --- An assigned instance of %s declared!' % latest_type_name)
+	global latest_decleared_name
+	global initialized_objects_output
+	global curr_object
+	print(' --- An assigned instance of %s named %s declared!' % (latest_type_name, latest_decleared_name))
+	curr_object = latest_decleared_name
+	initialized_objects_output[latest_decleared_name] = []
+	initialized_objects_output[latest_decleared_name].append(latest_type_name)
 	pass
 
 def p_storage_class_specifier(p):
@@ -492,19 +551,65 @@ def p_direct_abstract_declarators(p):
 	pass
 
 def p_initializer(p):
-	'''initializer : assignment_expression
-				   | LBRACE initializer_list RBRACE '''
+	'''initializer : assignment_expression see_initializer
+				   | LBRACE initializer_level_in initializer_list initializer_level_out RBRACE '''
 	print('initializer reduced')
 	pass
 
 def p_initializer_list(p):
-	'''initializer_list : initializer initializers'''
+	'''initializer_list : initializer initializer_field_1st initializers'''
 	pass
 
 def p_initializers(p):
-	'''initializers : ',' initializer initializers
+	'''initializers : ',' initializer initializer_field_more initializers
 					| ','
 					| empty '''
+	pass
+
+def p_initializer_field_1st(p):
+	'''initializer_field_1st : '''
+	global initializer_field
+	global initializer_level
+	global initializer_value
+	initializer_field[-1] = 1
+	print(' --- Find %d field %s @ level %d' % (initializer_field[-1], initializer_value, initializer_level))
+	pass
+
+def p_initializer_field_more(p):
+	'''initializer_field_more : '''
+	global initializer_field
+	global initializer_level
+	global initializer_value
+	global initializer_found
+	if initializer_found:
+		initializer_field[-1] += 1
+		print(' --- Find %d field %s @ level %d' % (initializer_field[-1], initializer_value, initializer_level))
+		initializer_found = False
+	pass
+
+def p_initializer_level_in(p):
+	'''initializer_level_in : '''
+	global initializer_level
+	global initializer_field
+	initializer_field[-1] += 1
+	print(" --- Entring struct initializer as %d field @ level %d" % (initializer_field[-1], initializer_level))
+	initializer_field.append(1)
+	initializer_level += 1
+	pass
+
+def p_initializer_level_out(p):
+	'''initializer_level_out : '''
+	global initializer_level
+	global initializer_field
+	initializer_field.pop()
+	initializer_level -= 1
+	pass
+
+def p_see_initializer(p):
+	'''see_initializer : '''
+	global initializer_found
+	initializer_found = True
+	print('see_initializer')
 	pass
 
 def p_statement(p):
